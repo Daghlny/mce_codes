@@ -11,7 +11,6 @@
 using std::queue;
 queue<task_t> taskque;
 
-
 void
 read_graph(vtype *&G, vid &nodenum, FILE *infile)
 {
