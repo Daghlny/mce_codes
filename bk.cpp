@@ -7,6 +7,8 @@
 #include <cstring>
 #include <assert.h>
 
+size_t totalclique = 0;
+
 void
 read_graph(vtype *&G, vid &nodenum, FILE *infile)
 {
@@ -65,16 +67,13 @@ void
 compute_cliques(const vtype *G, const vid &nodenum, FILE *outfile)
 {
     // add first level nodes of search tree
-    for(vid v = 0; v < nodenum; ++v)
-    {
-        vid *R = (vid*)malloc(sizeof(vid));
-        R[0] = v;
-        vid *P = (vid *)malloc(sizeof(vid) * G[v].deg);
-        memcpy(P, G[v].nbv, sizeof(vid) * G[v].deg);
-        vid *X = NULL;
-        node_t each_node_init(R, P, X, 1, G[v].deg, 0);
-        bk_recur_process(G, each_node_init, outfile);
-    }
+
+    totalclique = 0;
+    vid *P = (vid *)malloc(sizeof(vid) * nodenum);
+    for(int i = 0; i < nodenum; ++i) P[i] = i;
+    node_t root_node(NULL, P, NULL, 0, nodenum, 0);
+    bk_recur_process(G, root_node, outfile);
+
     return;
 }
 
@@ -83,14 +82,17 @@ bk_recur_process(const vtype *G, node_t &father, FILE *outfile)
 {
     if(father.Plen == 0 && father.Xlen == 0)
     {
+        totalclique++;
         output_clique(father, outfile);
         return;
     }
     for(int pindex = 0; pindex < father.Plen; ++pindex)
     {
+
+        vid curvertex = father.P[pindex];
         vid *newR = (vid *)malloc(sizeof(vid) * (father.Rlen+1));
         memcpy(newR, father.R, sizeof(vid) * (father.Rlen));
-        newR[father.Rlen] = father.P[pindex];
+        newR[father.Rlen] = curvertex;
 
         father.P[pindex] = -1;
 
@@ -101,16 +103,18 @@ bk_recur_process(const vtype *G, node_t &father, FILE *outfile)
         vid newPlen = 0;
         vid newXlen = 0;
 
-        intersect(newP, newX, newPlen, newXlen, father, father.P[pindex], G);
+        intersect(newP, newX, newPlen, newXlen, father, curvertex, G);
         node_t child(newR, newP, newX, newRlen, newPlen, newXlen);
         bk_recur_process(G, child, outfile);
 
         father.X = (vid*)realloc(father.X, father.Xlen+1);
-        father.X[father.Xlen+1] = father.P[pindex];
+        father.X[father.Xlen] = curvertex;
         ++father.Xlen;
     }
 }
 
+// intersect @father.P and G[v].nbv to get @newP
+// intersect @father.X and G[v].nbv to get @newX
 void
 intersect(vid *&newP, vid *&newX, vid &newPlen, vid &newXlen, node_t &father, vid v, const vtype *G)
 {
@@ -143,7 +147,7 @@ intersect(vid *&newP, vid *&newX, vid &newPlen, vid &newXlen, node_t &father, vi
 
 
 void
-output_clique(node_t node, FILE *outfile)
+output_clique(node_t &node, FILE *outfile)
 {
     // maybe these codes could be optimized by using @fwrite() 
     for(int i = 0; i != node.Rlen; ++i)

@@ -5,6 +5,8 @@
 #include "mce.hpp"
 #include "inputbuffer.hpp"
 
+extern size_t totalclique;
+
 int
 main(int argc, char **argv)
 {
@@ -20,5 +22,8 @@ main(int argc, char **argv)
     read_graph(G, nodenum, infile);
     compute_cliques(G, nodenum, outfile);
 
+    printf("Total Clique: %d\n", totalclique);
+
     return 0;
 }
+

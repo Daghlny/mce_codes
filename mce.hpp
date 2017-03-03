@@ -27,7 +27,7 @@ struct task_t
 
 struct node_t
 {
-    node_t(vid *R = NULL, vid *P = NULL, vid *X = NULL, vid Rlen = 0, vid Plen = 0, vid Xlen = 0)
+    node_t(vid *newR = NULL, vid *newP = NULL, vid *newX = NULL, vid newRlen = 0, vid newPlen = 0, vid newXlen = 0):R(newR), P(newP), X(newX), Rlen(newRlen), Plen(newPlen), Xlen(newXlen)
     {}
     ~node_t()
     {
@@ -56,8 +56,8 @@ void bk_recur_process(const vtype *G, node_t &father, FILE *outfile);
 
 void add_task(vid *newR, vid *newP, vid *newX, vid newRlen, vid newPlen, vid newXlen);
 
-void output_clique(node_t node, FILE *outfile);
-void output_clique(task_t T, FILE *outfile);
+void output_clique(node_t &node, FILE *outfile);
+void output_clique(task_t &T, FILE *outfile);
 void print_task(task_t T);
 
 /* global variables definition */
