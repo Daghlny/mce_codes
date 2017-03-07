@@ -27,13 +27,19 @@ struct task_t
 
 struct node_t
 {
-    node_t(vid *newR = NULL, vid *newP = NULL, vid *newX = NULL, vid newRlen = 0, vid newPlen = 0, vid newXlen = 0):R(newR), P(newP), X(newX), Rlen(newRlen), Plen(newPlen), Xlen(newXlen)
+    node_t(vid *newR, vid *newP, vid *newX, 
+           vid newRlen, vid newPlen, vid newXlen):
+        R(newR), P(newP), X(newX), Rlen(newRlen), Plen(newPlen), Xlen(newXlen)
     {}
+
     ~node_t()
     {
+        printf("delete a node_t\n");
+        /*
         if(R != NULL) free(R);
         if(P != NULL) free(P);
         if(X != NULL) free(X);
+        */
     }
 
     vid *R;

@@ -1,11 +1,12 @@
 
-#include "mce.hpp"
+#include "bk.hpp"
 #include "inputbuffer.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 #include <cstring>
 #include <assert.h>
+#include <malloc.h>
 
 size_t totalclique = 0;
 
@@ -80,10 +81,14 @@ compute_cliques(const vtype *G, const vid &nodenum, FILE *outfile)
 void
 bk_recur_process(const vtype *G, node_t &father, FILE *outfile)
 {
+    printf("enter a new recursive call\n");
     if(father.Plen == 0 && father.Xlen == 0)
     {
-        totalclique++;
-        output_clique(father, outfile);
+        if(father.Rlen != 0)
+        {
+            totalclique++;
+            output_clique(father, outfile);
+        }
         return;
     }
     for(int pindex = 0; pindex < father.Plen; ++pindex)
@@ -110,6 +115,7 @@ bk_recur_process(const vtype *G, node_t &father, FILE *outfile)
         father.X = (vid*)realloc(father.X, father.Xlen+1);
         father.X[father.Xlen] = curvertex;
         ++father.Xlen;
+        printf("R: %d  P: %d  X: %d  \n", malloc_usable_size(child.R), malloc_usable_size(child.P), malloc_usable_size(child.X));
     }
 }
 
@@ -157,4 +163,22 @@ output_clique(node_t &node, FILE *outfile)
     return;
 }
 
+int
+main(int argc, char **argv)
+{
+    vid nodenum = 0;
+    vtype *G = NULL;
+
+    FILE *infile = fopen(argv[1], "r+");
+    char *outfile_name = (char *)malloc(sizeof(char) * 100);
+    strcpy(outfile_name, argv[1]);
+    strcat(outfile_name, ".clique.txt");
+    FILE *outfile = fopen(outfile_name, "w+");
+
+    read_graph(G, nodenum, infile);
+
+    compute_cliques(G, nodenum, outfile);
+
+    return 0;
+}
 
