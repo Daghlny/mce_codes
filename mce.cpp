@@ -82,8 +82,9 @@ get_vertex_dd_map(vector<vid> &ddvertex, vid& degeneracy, map<vid, vid> &ddmap, 
     while( ddbuffer.getline(linebeg, lineend) > 0)
     {
         vid vertex = 0;
-        while( *(++linebeg) != ':' && *linebeg != '\n'){
+        while( *(linebeg) != ':' && *linebeg != '\n'){
             vertex = (10 * vertex) + int(*linebeg) - 48;
+            linebeg++;
         }
         ddmap.insert(std::make_pair(vertex, curvid++));
         
@@ -107,13 +108,13 @@ void
 get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
 {
     cc.clear();
-    graph_t neibor_sg;
+    graph_t sg;
 
     printf("#####  CC begin build neighbors subgraph\n");
-    get_neibor_sg(g, neibor_sg, vertex);
+    get_neibor_sg(g, sg, vertex);
     printf("#####  CC end neighbors subgraph building\n");
 
-    int cc_num = wcc(neibor_sg, cc);
+    int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
 }
 
@@ -126,17 +127,23 @@ binary_search(vtype &vl, vid v)
     while(low < high){
         vid mid = (low + high) / 2;
         if( vl.nbv[mid] < v )
-            high = mid - 1;
-        else if( vl.nbv[mid] > v )
             low  = mid + 1;
+        else if( vl.nbv[mid] > v )
+            high = mid - 1;
         else
             return mid;
     }
     return -1;
 }
 
+/*
+ * use BFS to mark all vertices and their neighbors with the same label
+ * then traverse all vertices' labels to get cc number
+ */
+
+//FIXed: @return value != cc.size()
 int
-wcc(graph_t &g, vector<int> &ccs)
+wcc(graph_t &g, vector<int> &cc)
 {
     int *labels = (int *)malloc(sizeof(int) * g.nodenum);
     memset(labels, 0, sizeof(int) * g.nodenum);
@@ -145,9 +152,10 @@ wcc(graph_t &g, vector<int> &ccs)
     vid pos = 0;
     while(pos < g.nodenum)
     {
+        ++ccnum;
         mark_cc(g, pos, labels, ccnum);
-        while( labels[pos] != 0 ) pos++;
-        ccnum++;
+        while( labels[pos] == 0 && pos < g.nodenum ) 
+            pos++;
     }
 
     vid cursize = 0;
@@ -161,16 +169,18 @@ wcc(graph_t &g, vector<int> &ccs)
                 cursize++;
         }while(pos < g.nodenum);
         num += cursize;
-        ccs.push_back(cursize);
+        cc.push_back(cursize);
         label++;
     }
 
     return ccnum;
 }
 
-void
+inline void
 mark_cc(graph_t &g, vid v, int *labels, int label)
 {
+    if(labels[v] <= label)
+        return;
     labels[v] = label;
     for(int it = 0; it < g[v].deg; ++it)
         mark_cc(g, g[v].nbv[it], labels, label);
@@ -179,30 +189,96 @@ mark_cc(graph_t &g, vid v, int *labels, int label)
 /*
  * return a subgraph @sg
  * vertices in @sg only belong to @vertex's adjacent list
+ * WARNING: this function relies the order in g.data[@vertex].nbv,
+ *          because @binary_search return the index to represent
+ *          neighbor's new id;
  */
 void    
-get_neibor_sg(graph_t &g, graph_t &neibor_sg, vid vertex)
+get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
 {
+    //FIX:you should ignore the vertex whose ID is smaller than @vertex
+    /*
+    vid sg_num = 0;
+    for(vid vit = 0; vit < g.data[vertex].deg; ++vit)
+    {
+        if( g.data[vertex].nbv[vit] > vertex )
+            break;
+        sg_num++;
+    }
+    sg_num = g[vertex].deg - sg_num;
+    */
     vid sg_num = g[vertex].deg;
-    neibor_sg.data = (vtype *)malloc(sizeof(vtype) * sg_num);
+    sg.data = (vtype *)malloc(sizeof(vtype) * sg_num);
+    sg.nodenum = sg_num;
+
+    vid curv = 0;
+    vtype &vt = g.data[vertex];
     for(int i = 0; i < sg_num; ++i)
     {
-        vid curv = g.data[vertex].nbv[i];
-        neibor_sg.data[i] = vtype();
-        neibor_sg.data[i].nbv = (vid *)malloc(sizeof(vtype) * g.data[curv].deg);
+        curv = vt.nbv[i];
+        vid *curnbv = g.data[curv].nbv;
+        vid curdeg = g.data[curv].deg;
+
+        sg.data[i] = vtype();
+        sg.data[i].nbv = (vid *)malloc(sizeof(vid) * curdeg);
         vid curnbv_idx = 0;
         for(int pos = 0; pos < g.data[curv].deg; ++pos)
         {
-            printf("flags\n");
-            vid idx = binary_search(g.data[vertex], g.data[curv].nbv[pos]);           
-            printf("flags again\n");
+            vid idx = binary_search(g.data[vertex], curnbv[pos]);           
             if(idx >= 0)
             {
-                neibor_sg.data[i].nbv[curnbv_idx] = idx;
-                curnbv_idx++;
+                sg.data[i].nbv[curnbv_idx++] = idx;
             }
         }
-        neibor_sg.data[i].deg = curnbv_idx;
+        sg.data[i].deg = curnbv_idx;
+    }
+}
+
+void
+init_g_withddmap(graph_t &g, FILE *gfile, map<vid,vid> &ddmap)
+{
+    inputbuffer gbuffer(gfile);
+    char *start = NULL, *end = NULL;
+    gbuffer.getline(start, end);
+    g.nodenum = atoi(start);
+
+    g.data = (vtype *)malloc(sizeof(vtype) * g.nodenum);
+    assert( g.data != NULL );
+
+    vid count = g.nodenum;
+    while( --count >= 0 )
+    {
+        start = NULL;
+        end   = NULL;
+        if( gbuffer.getline(start, end) < 0 ) break;
+
+        vid v = 0;
+        while( *start == '\n' ) ++start;
+
+        while( *(start) != ',' )
+        {
+            v = (10 * v) + int(*start) - 48;
+            ++start;
+        }
+        assert( v < g.nodenum );
+        v = ddmap[v];
+
+        vid deg = 0;
+        while( *(++start) != ':' && *start != '\n' )
+            deg = (10 * deg) + int(*start) - 48;
+
+        vid *adjlist = (vid *)malloc(sizeof(vid) * deg);
+        g.data[v].nbv = adjlist;
+        g.data[v].deg = deg;
+
+        for( int i = 0; i < deg ; ++i )
+        {
+            vid u = 0;
+            while( *(++start) != ':' && *(start) != '\n' )
+                u = (10 * u) + int(*start) - 48;
+            u = ddmap[u];
+            g.data[v].nbv[i] = u;
+        }
     }
 }
 

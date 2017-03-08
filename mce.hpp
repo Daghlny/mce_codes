@@ -109,7 +109,7 @@ vid  binaray_search(vtype&, vid);
 int  wcc(graph_t&, vector<int>&);
 void mark_cc(graph_t&, vid, int *, int);
 void get_neibor_sg(graph_t &, graph_t &, vid);
-
+void init_g_withddmap(graph_t &g, FILE *gfile, map<vid,vid> &ddmap);
 
 #endif
 
