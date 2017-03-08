@@ -100,5 +100,8 @@ inputbuffer::getsize(){
     return size;
 }
 
-
+inputbuffer::~inputbuffer()
+{
+    free(buff);
+}
 

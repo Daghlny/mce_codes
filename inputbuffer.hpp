@@ -38,6 +38,7 @@ class inputbuffer
         int getline(char *&start, char *&end);
         inline size_t getsize();
         inline int getoffset(char *start);
+        ~inputbuffer();
 
     protected:
         int FillInputBuffer(char *pos);
