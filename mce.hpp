@@ -99,13 +99,15 @@ graph_t::operator[] (const vid index) const
 graph_t::~graph_t()
 {
     for(int i = 0; i < nodenum; ++i)
-        free( data[i].nbv );
-    free(data);
+        if( data[i].deg != 0 && data[i].nbv != NULL)
+            free( data[i].nbv );
+    if( nodenum != 0 && data != NULL )
+        free(data);
 }
 
 void get_vertex_dd_map(vector<vid>&, vid&, map<vid,vid>&, inputbuffer&);
 void get_neighbor_cc(graph_t& , vid, vector<vid>&);
-vid  binaray_search(vtype&, vid);
+vid  binary_search(vtype&, vid);
 int  wcc(graph_t&, vector<int>&);
 void mark_cc(graph_t&, vid, int *, int);
 void get_neibor_sg(graph_t &, graph_t &, vid);

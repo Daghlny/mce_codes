@@ -4,11 +4,14 @@
 #include <vector>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <algorithm>
 #include "inputbuffer.hpp"
 #include "mce.hpp"
 
 using std::vector;
 using std::map;
+using std::string;
 
 // argv[1] = degeneracy order dictionary file
 // argv[2] = graph data file
@@ -33,32 +36,33 @@ main(int argc, char **argv)
     vid degeneracy = 0;
     get_vertex_dd_map(ddvertex, degeneracy, ddmap, ddbuffer);
 
-    printf("#####  begin reading graph  #####\n");
+    printf("main(): begin reading graph  #####\n");
     graph_t g;
     // you should use ddmap to build the graph data
-    g.init_g(gfile);
-    printf("#####  finish reading graph  #####\n");
+    init_g_withddmap(g, gfile, ddmap);
+    //g.init_g(gfile);
+    printf("main(): finish reading graph  #####\n");
    
-    printf("there are %d degeneracy vertex\n", ddvertex.size());
-    printf("the degeneracy vertex:");
+    printf("main(): there are %d degeneracy vertex\n", ddvertex.size());
+    printf("main(): the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){
         printf(" %d ", *it);
     }
     printf("\n");
 
     do{
-        printf("your vertex id: ");
+        printf("main(): your vertex id: ");
         vid vertex = 0;
         scanf("%d", &vertex);
+        vertex = ddmap[vertex];
+        printf("main(): current id: %d\n", vertex);
         if( vertex < 0 )
             break;
         vector<vid> cc;
         
-        printf("#####  begin run cc algorithm on %d's neighbors  #####\n", vertex);
         get_neighbor_cc(g, vertex, cc);
-        printf("#####  finish cc algorithm  #####\n");
 
-        printf("CC number: %d\n", cc.size());
+        printf("main(): CC number: %d\n", cc.size());
         for(vIt it = cc.begin(); it != cc.end(); ++it)
             printf(" %d ", *it);
         printf("\n");
@@ -93,7 +97,7 @@ get_vertex_dd_map(vector<vid> &ddvertex, vid& degeneracy, map<vid, vid> &ddmap, 
             degree = (10 * degree) + int(*linebeg) - 48;
         }
         if( degree > degeneracy ){
-            printf("degree: %d, degeneracy: %d\n", degree, degeneracy);
+            printf("get_vertex_dd_map(): degree: %d, degeneracy: %d\n", degree, degeneracy);
             ddvertex.clear();
             ddvertex.push_back(vertex);
             degeneracy = degree;
@@ -104,18 +108,79 @@ get_vertex_dd_map(vector<vid> &ddvertex, vid& degeneracy, map<vid, vid> &ddmap, 
 
 }
 
+/*
+ * main function, return the cc's size in @cc
+ * it will build @vertex's neighbors subgraph( @get_neibor_sg() ), 
+ * then run cc algorithm( @wcc() );
+ * on this subgraph;
+ */
 void
 get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
 {
     cc.clear();
     graph_t sg;
 
-    printf("#####  CC begin build neighbors subgraph\n");
+    printf("get_neighbor_cc(): CC begin build neighbors subgraph\n");
     get_neibor_sg(g, sg, vertex);
-    printf("#####  CC end neighbors subgraph building\n");
+    printf("get_neighbor_cc(): CC end neighbors subgraph building\n");
 
     int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
+}
+
+/*
+ * return a subgraph @sg
+ * vertices in @sg only belong to @vertex's adjacent list
+ * WARNING: this function relies the order in g.data[@vertex].nbv,
+ *          because @binary_search return the index to represent
+ *          neighbor's new id;
+ */
+void    
+get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
+{
+    //FIX:you should ignore the vertex whose ID is smaller than @vertex
+    
+    //WRANING:this loop relies on the g.data[vertex].nbv's sorted order
+    std::sort(g.data[vertex].nbv, g.data[vertex].nbv+g.data[vertex].deg);
+    vid smaller_vnum = 0;
+    for(vid vit = 0; vit < g.data[vertex].deg; ++vit)
+    {
+        if( g.data[vertex].nbv[vit] < vertex )
+            smaller_vnum++;
+    }
+    vid sg_num = g[vertex].deg - smaller_vnum;
+    printf("get_neibor_sg(): %d's neighbor subgraph's size: %d\n", vertex, sg_num);
+    sg.data = (vtype *)malloc(sizeof(vtype) * sg_num);
+    sg.nodenum = sg_num;
+
+    vid curv = 0;
+    vtype &vt = g.data[vertex];
+    for(int i = smaller_vnum; i < vt.deg; ++i)
+    {
+        curv = vt.nbv[i];
+
+        if( curv >= vertex )
+        {
+            vid *curnbv = g.data[curv].nbv;
+            vid  curdeg = g.data[curv].deg;
+
+            vid real_v = i - smaller_vnum;
+            sg.data[real_v] = vtype();
+            vid nbvlen = (curdeg > (vt.deg-smaller_vnum) ? (vt.deg-smaller_vnum) : (curdeg));
+            sg.data[real_v].nbv = (vid *)malloc(sizeof(vid) * nbvlen);
+            vid curnbv_idx = 0;
+            for(int pos = 0; pos < g.data[curv].deg; ++pos)
+            {
+                vid idx = binary_search(g.data[vertex], curnbv[pos]); 
+                if(idx-smaller_vnum >= 0)
+                {
+                    sg.data[real_v].nbv[curnbv_idx++] = idx-smaller_vnum;
+                }
+            }
+            std::sort(sg.data[real_v].nbv, sg.data[real_v].nbv+curnbv_idx);
+            sg.data[i].deg = curnbv_idx;
+        }
+    }
 }
 
 vid
@@ -140,7 +205,6 @@ binary_search(vtype &vl, vid v)
  * use BFS to mark all vertices and their neighbors with the same label
  * then traverse all vertices' labels to get cc number
  */
-
 //FIXed: @return value != cc.size()
 int
 wcc(graph_t &g, vector<int> &cc)
@@ -186,54 +250,8 @@ mark_cc(graph_t &g, vid v, int *labels, int label)
         mark_cc(g, g[v].nbv[it], labels, label);
 }
 
-/*
- * return a subgraph @sg
- * vertices in @sg only belong to @vertex's adjacent list
- * WARNING: this function relies the order in g.data[@vertex].nbv,
- *          because @binary_search return the index to represent
- *          neighbor's new id;
- */
-void    
-get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
-{
-    //FIX:you should ignore the vertex whose ID is smaller than @vertex
-    /*
-    vid sg_num = 0;
-    for(vid vit = 0; vit < g.data[vertex].deg; ++vit)
-    {
-        if( g.data[vertex].nbv[vit] > vertex )
-            break;
-        sg_num++;
-    }
-    sg_num = g[vertex].deg - sg_num;
-    */
-    vid sg_num = g[vertex].deg;
-    sg.data = (vtype *)malloc(sizeof(vtype) * sg_num);
-    sg.nodenum = sg_num;
-
-    vid curv = 0;
-    vtype &vt = g.data[vertex];
-    for(int i = 0; i < sg_num; ++i)
-    {
-        curv = vt.nbv[i];
-        vid *curnbv = g.data[curv].nbv;
-        vid curdeg = g.data[curv].deg;
-
-        sg.data[i] = vtype();
-        sg.data[i].nbv = (vid *)malloc(sizeof(vid) * curdeg);
-        vid curnbv_idx = 0;
-        for(int pos = 0; pos < g.data[curv].deg; ++pos)
-        {
-            vid idx = binary_search(g.data[vertex], curnbv[pos]);           
-            if(idx >= 0)
-            {
-                sg.data[i].nbv[curnbv_idx++] = idx;
-            }
-        }
-        sg.data[i].deg = curnbv_idx;
-    }
-}
-
+// FIX:using @ddmap to map original id to new id
+// BUT, the mapping adjacent list weren't sorted.
 void
 init_g_withddmap(graph_t &g, FILE *gfile, map<vid,vid> &ddmap)
 {
@@ -248,8 +266,7 @@ init_g_withddmap(graph_t &g, FILE *gfile, map<vid,vid> &ddmap)
     vid count = g.nodenum;
     while( --count >= 0 )
     {
-        start = NULL;
-        end   = NULL;
+        start = end = NULL;
         if( gbuffer.getline(start, end) < 0 ) break;
 
         vid v = 0;
