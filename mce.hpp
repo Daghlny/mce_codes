@@ -28,6 +28,8 @@ struct graph_t
         void init_g(FILE *gfile);
         vtype &operator[] (const vid index);
         const vtype &operator[] (const vid index) const;
+        vid edge_num() const;
+        void write_graph_adjlist(FILE *gfile) const;
         ~graph_t();
 
     vtype *data;
@@ -94,6 +96,48 @@ const vtype &
 graph_t::operator[] (const vid index) const
 {
     return data[index];
+}
+
+vid
+graph_t::edge_num() const
+{
+    int edgeNum = 0;
+    for( int pos = 0; pos < nodenum; ++pos )
+    {
+        edgeNum += data[pos].deg;
+    }
+    // check if the edge number is leagl
+    // FIX: maybe this codeblock does't needed
+    /*
+    if( edgeNum % 2 != 0 )
+    {
+        printf("%s: sorry, but the sum of adjacent list's sizes is not even\n", __FUNCTION__);
+        FILE *efile = fopen("./edge.errors", "w+");
+        for( int pos = 0; pos < nodenum; ++pos )
+        {
+            for( int i = 0; i < data[pos].deg; ++i )
+            {
+                binary_search()
+                data[pos].nbv[i]
+            }
+        }
+    }
+    */
+    assert(edgeNum % 2 == 0);
+    return edgeNum / 2;
+}
+
+void
+graph_t::write_graph_adjlist(FILE *gfile) const
+{
+    fprintf(gfile, "%d\n", nodenum);
+    for(vid i = 0; i < nodenum; ++i)
+    {
+        fprintf(gfile, "%d,%d", i, data[i].deg);
+        for( vid cnt = 0; cnt < data[i].deg; ++cnt )
+            fprintf(gfile, ":%d", data[i].nbv[cnt]);
+        fprintf(gfile, "\n");
+    }
 }
 
 graph_t::~graph_t()

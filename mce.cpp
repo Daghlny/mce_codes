@@ -123,7 +123,10 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
     printf("get_neighbor_cc(): CC begin build neighbors subgraph\n");
     get_neibor_sg(g, sg, vertex);
     printf("get_neighbor_cc(): CC end neighbors subgraph building\n");
+    FILE *sgfile = fopen("./sg.data.txt", "wr+");
+    sg.write_graph_adjlist(sgfile);
 
+    printf("%s(): sg's edge number: %d\n", __FUNCTION__, sg.edge_num());
     int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
 }
@@ -164,7 +167,7 @@ get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
             vid *curnbv = g.data[curv].nbv;
             vid  curdeg = g.data[curv].deg;
 
-            vid real_v = i - smaller_vnum;
+            vid real_v = i - smaller_vnum;  // the new id of @curv
             sg.data[real_v] = vtype();
             vid nbvlen = (curdeg > (vt.deg-smaller_vnum) ? (vt.deg-smaller_vnum) : (curdeg));
             sg.data[real_v].nbv = (vid *)malloc(sizeof(vid) * nbvlen);
@@ -172,13 +175,13 @@ get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
             for(int pos = 0; pos < g.data[curv].deg; ++pos)
             {
                 vid idx = binary_search(g.data[vertex], curnbv[pos]); 
-                if(idx-smaller_vnum >= 0)
+                if( idx-smaller_vnum >= 0 )
                 {
                     sg.data[real_v].nbv[curnbv_idx++] = idx-smaller_vnum;
                 }
             }
             std::sort(sg.data[real_v].nbv, sg.data[real_v].nbv+curnbv_idx);
-            sg.data[i].deg = curnbv_idx;
+            sg.data[real_v].deg = curnbv_idx;
         }
     }
 }
@@ -189,7 +192,7 @@ binary_search(vtype &vl, vid v)
     vid low = 0;
     vid high = vl.deg;
 
-    while(low < high){
+    while(low <= high){
         vid mid = (low + high) / 2;
         if( vl.nbv[mid] < v )
             low  = mid + 1;
