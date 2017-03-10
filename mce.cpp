@@ -9,6 +9,9 @@
 #include "inputbuffer.hpp"
 #include "mce.hpp"
 
+// whether to write the sg's graph data to the file
+//#define __WRITE_SG__
+
 using std::vector;
 using std::map;
 using std::string;
@@ -36,37 +39,39 @@ main(int argc, char **argv)
     vid degeneracy = 0;
     get_vertex_dd_map(ddvertex, degeneracy, ddmap, ddbuffer);
 
-    printf("main(): begin reading graph  #####\n");
+
+    LOG("reading graph\n");
     graph_t g;
     // you should use ddmap to build the graph data
     init_g_withddmap(g, gfile, ddmap);
-    //g.init_g(gfile);
-    printf("main(): finish reading graph  #####\n");
-   
-    printf("main(): there are %d degeneracy vertex\n", ddvertex.size());
-    printf("main(): the degeneracy vertex:");
+    LOG("there are %d degeneracy vertex\n", ddvertex.size());
+    LOG("the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){
         printf(" %d ", *it);
     }
     printf("\n");
 
     do{
-        printf("main(): your vertex id: ");
+        printf("your vertex id: ");
         vid vertex = 0;
         scanf("%d", &vertex);
+        if( vertex < 0 ) break;
+        if( vertex > g.nodenum ) exit(0);
         vertex = ddmap[vertex];
-        printf("main(): current id: %d\n", vertex);
-        if( vertex < 0 )
-            break;
+        LOG("your vertex's current id: %d\n", vertex);
         vector<vid> cc;
         
         get_neighbor_cc(g, vertex, cc);
 
-        printf("main(): CC number: %d\n", cc.size());
+        LOG("CC number: %d\n", cc.size());
+        LOG("the size of connected components: ");
         for(vIt it = cc.begin(); it != cc.end(); ++it)
             printf(" %d ", *it);
         printf("\n");
     }while(1);
+
+    fclose(ddfile);
+    fclose(gfile);
 
     return 0;
 }
@@ -97,7 +102,7 @@ get_vertex_dd_map(vector<vid> &ddvertex, vid& degeneracy, map<vid, vid> &ddmap, 
             degree = (10 * degree) + int(*linebeg) - 48;
         }
         if( degree > degeneracy ){
-            printf("get_vertex_dd_map(): degree: %d, degeneracy: %d\n", degree, degeneracy);
+            LOG("degree: %d, degeneracy: %d\n", degree, degeneracy);
             ddvertex.clear();
             ddvertex.push_back(vertex);
             degeneracy = degree;
@@ -110,7 +115,7 @@ get_vertex_dd_map(vector<vid> &ddvertex, vid& degeneracy, map<vid, vid> &ddmap, 
 
 /*
  * main function, return the cc's size in @cc
- * it will build @vertex's neighbors subgraph( @get_neibor_sg() ), 
+ * it will build @vertex's neighbors subgraph( @get_ddneibor_sg() ), 
  * then run cc algorithm( @wcc() );
  * on this subgraph;
  */
@@ -120,13 +125,14 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
     cc.clear();
     graph_t sg;
 
-    printf("get_neighbor_cc(): CC begin build neighbors subgraph\n");
-    get_neibor_sg(g, sg, vertex);
-    printf("get_neighbor_cc(): CC end neighbors subgraph building\n");
+    LOG("build the neighbor subgraph\n");
+    get_ddneibor_sg(g, sg, vertex);
+#ifdef __WRITE_SG__
     FILE *sgfile = fopen("./sg.data.txt", "wr+");
     sg.write_graph_adjlist(sgfile);
+#endif
 
-    printf("%s(): sg's edge number: %d\n", __FUNCTION__, sg.edge_num());
+    LOG("sg's edge number: %d\n", sg.edge_num());
     int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
 }
@@ -139,7 +145,7 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
  *          neighbor's new id;
  */
 void    
-get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
+get_ddneibor_sg(graph_t &g, graph_t &sg, vid vertex)
 {
     //FIX:you should ignore the vertex whose ID is smaller than @vertex
     
@@ -152,7 +158,7 @@ get_neibor_sg(graph_t &g, graph_t &sg, vid vertex)
             smaller_vnum++;
     }
     vid sg_num = g[vertex].deg - smaller_vnum;
-    printf("get_neibor_sg(): %d's neighbor subgraph's size: %d\n", vertex, sg_num);
+    LOG("%d's neighbor subgraph's size: %d\n", vertex, sg_num);
     sg.data = (vtype *)malloc(sizeof(vtype) * sg_num);
     sg.nodenum = sg_num;
 
@@ -221,12 +227,12 @@ wcc(graph_t &g, vector<int> &cc)
     {
         ++ccnum;
         mark_cc(g, pos, labels, ccnum);
-        while( labels[pos] == 0 && pos < g.nodenum ) 
+        while( labels[pos] != 0 && pos < g.nodenum ) 
             pos++;
     }
 
     vid cursize = 0;
-    int label = 0;
+    int label = 1;
     vid num = 0;
     while( num < g.nodenum )
     {
@@ -238,6 +244,7 @@ wcc(graph_t &g, vector<int> &cc)
         num += cursize;
         cc.push_back(cursize);
         label++;
+        cursize = 0;
     }
 
     return ccnum;
@@ -246,7 +253,7 @@ wcc(graph_t &g, vector<int> &cc)
 inline void
 mark_cc(graph_t &g, vid v, int *labels, int label)
 {
-    if(labels[v] <= label)
+    if(labels[v] >= label)
         return;
     labels[v] = label;
     for(int it = 0; it < g[v].deg; ++it)

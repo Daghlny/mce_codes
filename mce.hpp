@@ -5,8 +5,15 @@
 #include <assert.h>
 #include <cstdlib>
 #include <vector>
+#include <cstring>
 #include <map>
 #include "inputbuffer.hpp"
+
+// whether to write the graph's degree list to the file
+//#define __OUTPUT__GDEG__
+
+#define LOG(fmt, ...) \
+    printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 using std::vector;
 using std::map;
@@ -101,28 +108,23 @@ graph_t::operator[] (const vid index) const
 vid
 graph_t::edge_num() const
 {
+    /* debug */
     int edgeNum = 0;
+
+    int totalnum = 0;
+    FILE *degfile = fopen("./deg.data", "wr+");
     for( int pos = 0; pos < nodenum; ++pos )
     {
+#ifdef __OUTPUT__GDEG__
+        if( data[pos].deg == 371 ) totalnum++;
+        fprintf(degfile,"%d:%d\n", pos, data[pos].deg);
+#endif
         edgeNum += data[pos].deg;
     }
-    // check if the edge number is leagl
-    // FIX: maybe this codeblock does't needed
-    /*
-    if( edgeNum % 2 != 0 )
-    {
-        printf("%s: sorry, but the sum of adjacent list's sizes is not even\n", __FUNCTION__);
-        FILE *efile = fopen("./edge.errors", "w+");
-        for( int pos = 0; pos < nodenum; ++pos )
-        {
-            for( int i = 0; i < data[pos].deg; ++i )
-            {
-                binary_search()
-                data[pos].nbv[i]
-            }
-        }
-    }
-    */
+    LOG("totalnum: %d\n", totalnum);
+    //printf("$$ %d\n", totalnum);
+    fclose(degfile);
+
     assert(edgeNum % 2 == 0);
     return edgeNum / 2;
 }
@@ -154,7 +156,7 @@ void get_neighbor_cc(graph_t& , vid, vector<vid>&);
 vid  binary_search(vtype&, vid);
 int  wcc(graph_t&, vector<int>&);
 void mark_cc(graph_t&, vid, int *, int);
-void get_neibor_sg(graph_t &, graph_t &, vid);
+void get_ddneibor_sg(graph_t &, graph_t &, vid);
 void init_g_withddmap(graph_t &g, FILE *gfile, map<vid,vid> &ddmap);
 
 #endif
