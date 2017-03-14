@@ -176,8 +176,9 @@ main(int argc, char **argv)
     FILE *outfile = fopen(outfile_name, "w+");
 
     read_graph(G, nodenum, infile);
-
     compute_cliques(G, nodenum, outfile);
+
+    printf("Total Clique: %d\n", totalclique);
 
     return 0;
 }
