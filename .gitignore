@@ -4,5 +4,6 @@
 *.swp
 tags
 *.data
+test*
 
 ./bin/*

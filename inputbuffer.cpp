@@ -6,51 +6,52 @@
 #include <iostream>
 
 #include "inputbuffer.hpp"
+#include "mce.hpp"
 
 using std::string;
 
 class inputbuffer;
 
 /*
- * get a line marked by @start and @end
+ * get a line marked by @lbeg and @end
  * returnvalue < 0 if the file is over(it means no more lines)
  * returnvalue > 0 is the number of characters in this line
  */
 int
-inputbuffer::getline(char *&start, char *&end)
+inputbuffer::getline(char *&lbeg, char *&lend)
 {
     if( curpos >= endpos )
     {
         int res = FillInputBuffer(curpos);
         if( res == 0 )
         {
-            printf("the input buffer size is too small\n");
+            LOG("the input buffer size is too small\n");
             exit(0);
         }
         if( res < 0 ) return res;
     }
 
-    start = curpos;
+    lbeg = curpos;
     while( *curpos != '\n')
     {
+        /* 
+         * if the @curpos > @endpos, it means we have already read all data in 
+         * inputbuffer, but we still not attach the line's end
+         * so we need to get more data from file
+         */
         if( curpos > endpos ){
-            /* 
-             * if the @curpos > @endpos, it means we have already read all data in 
-             * inputbuffer, but we still not attach the line's end
-             * so we need to get more data from file
-             */
-            unsigned int offset = curpos - start;
-            int byteread = FillInputBuffer(start);
-            start = curpos; // it equals to start == buff
+            unsigned int offset = curpos - lbeg;
+            int byteread = FillInputBuffer(lbeg);
+            lbeg = curpos;      // it equals to lbeg == buff
             /* this will make curpos points to the elem before the proper position */
             curpos += offset-2;
         }
         curpos++;
     }
-    end = curpos; // curpos should point to '\n' in this statement
-    while( *curpos == '\n' ) ++curpos;
+    lend = curpos; // curpos should point to '\n' in this statement
+    while( *curpos == '\n' && curpos <= endpos) ++curpos;
 
-    return end - start;
+    return lend - lbeg;
 }
 
 /*
@@ -74,7 +75,7 @@ inputbuffer::FillInputBuffer(char *pos)
         curpos = buff;
         endpos = buff;
     } else {
-        printf(" the @pos > @endpos in @FillInputBuffer()\n");
+        LOG(" the @pos > @endpos in @FillInputBuffer()\n");
         exit(0);
     }
 
@@ -84,7 +85,7 @@ inputbuffer::FillInputBuffer(char *pos)
         endpos += byteread;
         if( byteread < size-i ){
             if(!feof(file) && ferror(file)){
-                perror("Error reading from input file. Abort!\n");
+                LOG("Error reading from input file. Abort!\n");
                 exit(0);
             }
         }
