@@ -6,7 +6,9 @@
 #include <iostream>
 
 #include "inputbuffer.hpp"
-#include "mce.hpp"
+
+#define LOG(fmt, ...) \
+    printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 using std::string;
 
