@@ -19,6 +19,7 @@ class inputbuffer;
  * returnvalue < 0 if the file is over(it means no more lines)
  * returnvalue > 0 is the number of characters in this line
  */
+//FIX:run ddbuffer on twitter graphdata have a "buffer size is too small" error
 int
 inputbuffer::getline(char *&lbeg, char *&lend)
 {
