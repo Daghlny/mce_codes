@@ -1,7 +1,7 @@
 
 HEADERS=./mce.hpp ./inputbuffer.hpp
-asg: asg.cpp inputbuffer.cpp $(HEADERS)
-	g++ -O3 -std=c++11 ./asg.cpp ./inputbuffer.cpp -o asg.out
+asg: neighbourhood.cpp inputbuffer.cpp $(HEADERS)
+	g++ -O3 -std=c++11 ./neighbourhood.cpp ./inputbuffer.cpp -o asg.out
 mce: mce.cpp mce.hpp inputbuffer.cpp inputbuffer.hpp
 	g++ -O3 -std=c++11 ./mce.cpp ./inputbuffer.cpp -o mce.out
 debug: mce.cpp mce.hpp inputbuffer.cpp inputbuffer.hpp

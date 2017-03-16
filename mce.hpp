@@ -36,7 +36,9 @@ struct graph_t
         vtype &operator[] (const vid index);
         const vtype &operator[] (const vid index) const;
         vid edge_num() const;
+        vid vertex_num() const;
         void write_graph_adjlist(FILE *gfile) const;
+        void write_degree_table(FILE *dfile) const;
         ~graph_t();
 
     vtype *data;
@@ -108,11 +110,12 @@ graph_t::operator[] (const vid index) const
 vid
 graph_t::edge_num() const
 {
-    /* debug */
     int edgeNum = 0;
 
+#ifdef __OUTPUT__GDEG__
     int totalnum = 0;
     FILE *degfile = fopen("./deg.data", "wr+");
+#endif
     for( int pos = 0; pos < nodenum; ++pos )
     {
 #ifdef __OUTPUT__GDEG__
@@ -121,12 +124,19 @@ graph_t::edge_num() const
 #endif
         edgeNum += data[pos].deg;
     }
-    LOG("totalnum: %d\n", totalnum);
-    //printf("$$ %d\n", totalnum);
+#ifdef __OUTPUT__GDEG__ 
+    LOG("total adjacent vertex: %d\n", totalnum);
+#endif
     fclose(degfile);
 
     assert(edgeNum % 2 == 0);
     return edgeNum / 2;
+}
+
+vid
+graph_t::vertex_num() const
+{
+    return nodenum;
 }
 
 void
@@ -142,6 +152,16 @@ graph_t::write_graph_adjlist(FILE *gfile) const
     }
 }
 
+void
+graph_t::write_degree_table(FILE *dfile) const 
+{
+    fprintf(dfile, "#vertexID:degree\n");
+    for( vid i = 0; i < nodenum; ++i )
+    {
+        fprintf(dfile, "%d:%d\n", i, data[i].deg);    
+    }
+}
+
 graph_t::~graph_t()
 {
     for(int i = 0; i < nodenum; ++i)
@@ -151,6 +171,7 @@ graph_t::~graph_t()
         free(data);
 }
 
+// these functions' definitions are in neighbourhood.cpp 
 void get_vertex_dd_map(vector<vid>&, vid&, map<vid,vid>&, inputbuffer&);
 void get_neighbor_cc(graph_t& , vid, vector<vid>&);
 vid  binary_search(vtype&, vid);
