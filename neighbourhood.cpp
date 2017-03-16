@@ -8,11 +8,14 @@
 #include <algorithm>
 #include "inputbuffer.hpp"
 #include "mce.hpp"
+#include "thirdparty/json.hpp"
 
 // whether to write the sg's graph data to the file
 //#define __WRITE_SG__
-#define _OUTPUT_MAX_DEGREE_
-//#define _OUTPUT_G_DEG_TABLE_
+
+/* the macros below should be activated only one in meantime */
+//#define _USER_INPUT_
+#define _AUTO_EXPERIMENT_
 
 using std::vector;
 using std::map;
@@ -33,6 +36,9 @@ main(int argc, char **argv)
 
     FILE *ddfile = fopen(argv[1], "r+");
     FILE *gfile  = fopen(argv[2], "r+");
+    string sfilename(argv[2]);
+    sfilename += ".statistics";
+    FILE *sfile  = fopen(sfilename.c_str(), "w+");
 
     inputbuffer ddbuffer(ddfile);
 
@@ -44,21 +50,16 @@ main(int argc, char **argv)
 
     LOG("reading graph\n");
     graph_t g;
-    // you should use ddmap to build the graph data
     init_g_withddmap(g, gfile, ddmap);
+    json j;
+    j["nodenum"] = g.nodenum;
+    j["edgenum"] = g.edge_num();
+    j["degeneracy"] = degeneracy;
+    printf("%s\n", j.dump(4));
+    g.write_graph_statistics(sfile);
+    fprintf(sfile, "\"degeneracy\": %d,\n", degeneracy);
 
-#ifdef _OUTPUT_MAX_DEGREE_
-    LOG("maximum degree: %d\n", g.maximum_degree());
-#endif
-
-#ifdef _OUTPUT_G_DEG_TABLE_
-    string s(argv[2]);
-    s = s+".degree.table";
-    FILE *gdegfile = fopen(s.c_str(), "w+");
-    g.write_degree_table(gdegfile);
-    fclose(gdegfile);
-#endif
-
+#ifdef _USER_INPUT_
     LOG("there are %d degeneracy vertex\n", ddvertex.size());
     LOG("the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){
@@ -84,9 +85,30 @@ main(int argc, char **argv)
             printf(" %d ", *it);
         printf("\n");
     }while(1);
+#endif
+
+#ifdef _AUTO_EXPERIMENT_
+    string ddNfilename(argv[2]);
+    ddNfilename += ".neighbourhood";
+    FILE *ddNfile = fopen(ddNfilename.c_str(), "w+");
+    LOG("begin recording degeneracy vertices' neighbourhood\n");
+    fprintf(sfile, "###############degeneracy vertex neighbourhood\n");
+    for( vIt it = ddvertex.begin(); it != ddvertex.end(); ++it) 
+    {
+        vid vertex = ddmap[*it];
+        vector<vid> cc;
+        graph_t sg;
+        get_ddneibor_sg(g, sg, vertex);
+        vid sg_edge_num = sg.edge_num();
+        fprintf(sfile, "originID: %d,degeneracyID:%d,edgenum:%d\n", *it, vertex, sg_edge_num);
+        fprintf(ddNfile, "originID: %d,degeneracyID:%d,edgenum:%d\n", *it, vertex, sg_edge_num);
+        sg.write_degree_table(ddNfile);
+    }
+#endif
 
     fclose(ddfile);
     fclose(gfile);
+    fclose(sfile);
 
     return 0;
 }
@@ -142,6 +164,7 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
 
     LOG("build the neighbor subgraph\n");
     get_ddneibor_sg(g, sg, vertex);
+
 #ifdef __WRITE_SG__
     FILE *sgfile = fopen("./sg.data.txt", "wr+");
     sg.write_graph_adjlist(sgfile);

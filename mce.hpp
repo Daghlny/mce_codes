@@ -39,6 +39,7 @@ struct graph_t
         vid vertex_num() const;
         void write_graph_adjlist(FILE *gfile) const;
         void write_degree_table(FILE *dfile) const;
+        void write_graph_statistics(FILE *sfile) const;
         vid maximum_degree() const;
         ~graph_t();
 
@@ -163,6 +164,14 @@ graph_t::write_graph_adjlist(FILE *gfile) const
             fprintf(gfile, ":%d", data[i].nbv[cnt]);
         fprintf(gfile, "\n");
     }
+}
+        
+void 
+graph_t::write_graph_statistics(FILE *sfile) const
+{
+    fprintf(sfile, "\"vertex count\": %d,\n", nodenum);
+    fprintf(sfile, "\"edge count\": %d,\n", edge_num());
+    fprintf(sfile, "\"maximum degree\": %d,\n", maximum_degree());
 }
 
 void
