@@ -169,9 +169,9 @@ graph_t::write_graph_adjlist(FILE *gfile) const
 void 
 graph_t::write_graph_statistics(FILE *sfile) const
 {
-    fprintf(sfile, "\"vertex count\": %d,\n", nodenum);
-    fprintf(sfile, "\"edge count\": %d,\n", edge_num());
-    fprintf(sfile, "\"maximum degree\": %d,\n", maximum_degree());
+    fprintf(sfile, "\"vertex count\": %d\n", nodenum);
+    fprintf(sfile, "\"edge count\": %d\n", edge_num());
+    fprintf(sfile, "\"maximum degree\": %d\n", maximum_degree());
 }
 
 void

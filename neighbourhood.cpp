@@ -5,10 +5,15 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <iostream>
 #include <algorithm>
 #include "inputbuffer.hpp"
 #include "mce.hpp"
-#include "thirdparty/json.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/pointer.h"
 
 // whether to write the sg's graph data to the file
 //#define __WRITE_SG__
@@ -20,6 +25,10 @@
 using std::vector;
 using std::map;
 using std::string;
+using std::cout;
+using std::endl;
+
+using namespace rapidjson;
 
 // argv[1] = degeneracy order dictionary file
 // argv[2] = graph data file
@@ -51,11 +60,16 @@ main(int argc, char **argv)
     LOG("reading graph\n");
     graph_t g;
     init_g_withddmap(g, gfile, ddmap);
-    json j;
-    j["nodenum"] = g.nodenum;
-    j["edgenum"] = g.edge_num();
-    j["degeneracy"] = degeneracy;
-    printf("%s\n", j.dump(4));
+    vid edgenum = g.edge_num();
+
+    Document gd;
+    Document::AllocatorType &gd_allocator = gd.GetAllocator();
+    gd.SetObject();
+    Pointer("/nodenum").Set(gd, g.nodenum);
+    Pointer("/edgenum").Set(gd, edgenum);
+    Pointer("/degeneracy").Set(gd, degeneracy);
+    Pointer("/average degree").Set(gd, edgenum/g.nodenum*2);
+
     g.write_graph_statistics(sfile);
     fprintf(sfile, "\"degeneracy\": %d,\n", degeneracy);
 
@@ -88,11 +102,19 @@ main(int argc, char **argv)
 #endif
 
 #ifdef _AUTO_EXPERIMENT_
+    
+    Document sgd;
+    sgd.SetObject();
+    Document::AllocatorType &sg_allocator = sgd.GetAllocator();
+    Value sgs(kArrayType);
+    //sgd.AddMember("sginfo", sgs, sg_allocator);
+
     string ddNfilename(argv[2]);
     ddNfilename += ".neighbourhood";
     FILE *ddNfile = fopen(ddNfilename.c_str(), "w+");
     LOG("begin recording degeneracy vertices' neighbourhood\n");
     fprintf(sfile, "###############degeneracy vertex neighbourhood\n");
+    Value nbhs(kArrayType);
     for( vIt it = ddvertex.begin(); it != ddvertex.end(); ++it) 
     {
         vid vertex = ddmap[*it];
@@ -100,11 +122,38 @@ main(int argc, char **argv)
         graph_t sg;
         get_ddneibor_sg(g, sg, vertex);
         vid sg_edge_num = sg.edge_num();
-        fprintf(sfile, "originID: %d,degeneracyID:%d,edgenum:%d\n", *it, vertex, sg_edge_num);
+
+        Value vsg(kObjectType);
+        vsg.AddMember("originID", *it, gd_allocator);
+        vsg.AddMember("degeneracyID", vertex, gd_allocator);
+        vsg.AddMember("edgenum", sg_edge_num, gd_allocator);
+        vsg.AddMember("average degree", sg_edge_num/degeneracy*2, gd_allocator);
+
+        nbhs.PushBack(vsg, gd_allocator);
+
+        Value sgv(kObjectType);
+        sgv.AddMember("originID", *it, sg_allocator);
+        sgv.AddMember("degeneracyID", vertex, sg_allocator);
+        sgv.AddMember("edgenum", sg_edge_num, sg_allocator);
+        sgv.AddMember("average degree", sg_edge_num/degeneracy*2, sg_allocator);
+        
+        Value degTable(kArrayType);
+        for(int sgi = 0; sgi < sg.nodenum; ++sgi)
+            degTable.PushBack(sg[sgi].deg, sg_allocator);
+        sgv.AddMember("degree Table", degTable, sg_allocator);
+        sgs.PushBack(sgv, sg_allocator);
+
         fprintf(ddNfile, "originID: %d,degeneracyID:%d,edgenum:%d\n", *it, vertex, sg_edge_num);
         sg.write_degree_table(ddNfile);
     }
+    sgd.AddMember("degeneracy neighbourhood", sgs, sg_allocator);
+    gd.AddMember("degeneracy neighbourhood", nbhs, gd_allocator);
 #endif
+
+    StringBuffer buffer;
+    PrettyWriter<StringBuffer> writer(buffer);
+    sgd.Accept(writer);
+    cout << buffer.GetString() << endl;
 
     fclose(ddfile);
     fclose(gfile);
@@ -169,8 +218,9 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
     FILE *sgfile = fopen("./sg.data.txt", "wr+");
     sg.write_graph_adjlist(sgfile);
 #endif
-
+#ifdef _USER_INPUT_
     LOG("sg's edge number: %d\n", sg.edge_num());
+#endif
     int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
 }
@@ -196,7 +246,6 @@ get_ddneibor_sg(graph_t &g, graph_t &sg, vid vertex)
             smaller_vnum++;
     }
     vid sg_num = g[vertex].deg - smaller_vnum;
-    LOG("%d's neighbor subgraph's size: %d\n", vertex, sg_num);
     sg.data = (vtype *)malloc(sizeof(vtype) * sg_num);
     sg.nodenum = sg_num;
 
