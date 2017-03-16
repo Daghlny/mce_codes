@@ -127,8 +127,8 @@ graph_t::edge_num() const
     }
 #ifdef __OUTPUT__GDEG__ 
     LOG("total adjacent vertex: %d\n", totalnum);
-#endif
     fclose(degfile);
+#endif
 
     assert(edgeNum % 2 == 0);
     return edgeNum / 2;

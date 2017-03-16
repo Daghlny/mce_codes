@@ -1,13 +1,18 @@
 
 HEADERS=./mce.hpp ./inputbuffer.hpp
+CPPVERSION = c++11
+GDBFLAGS= -O0 -std=$(CPPVERSION) -ggdb
+GCCFLAGS= -O3 -std=$(CPPVERSION)
+COMPILER= g++
+
 asg: neighbourhood.cpp inputbuffer.cpp $(HEADERS)
-	g++ -O3 -std=c++11 ./neighbourhood.cpp ./inputbuffer.cpp -o asg.out
-mce: mce.cpp mce.hpp inputbuffer.cpp inputbuffer.hpp
-	g++ -O3 -std=c++11 ./mce.cpp ./inputbuffer.cpp -o mce.out
-debug: mce.cpp mce.hpp inputbuffer.cpp inputbuffer.hpp
-	g++ -ggdb -O0 -std=c++11 ./mce.cpp ./inputbuffer.cpp -o debug_mce.out
-bk: mce.hpp bkMain.cpp inputbuffer.cpp inputbuffer.hpp bk.cpp
-	g++ -O3 -std=c++11 ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o bk.out
-bkdebug: mce.hpp bkMain.cpp inputbuffer.cpp inputbuffer.hpp bk.cpp
-	g++ -ggdb -O0 -std=c++11 ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o debug_bk.out
+	$(COMPILER) $(GCCFLAGS) ./neighbourhood.cpp ./inputbuffer.cpp -o asg.out
+mce: mce.cpp inputbuffer.cpp $(HEADERS)
+	$(COMPILER) $(GCCFLAGS) ./mce.cpp ./inputbuffer.cpp -o mce.out
+debug: mce.cpp inputbuffer.cpp $(HEADERS)
+	$(COMPILER) $(GDBFLAGS) ./mce.cpp ./inputbuffer.cpp -o debug_mce.out
+bk: bkMain.cpp inputbuffer.cpp bk.cpp $(HEADERS)
+	$(COMPILER) $(GCCFLAGS) ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o bk.out
+bkdebug: bkMain.cpp inputbuffer.cpp bk.cpp $(HEADERS)
+	$(COMPILER) $(GDBFLAGS) ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o debug_bk.out
 
