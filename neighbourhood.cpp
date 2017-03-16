@@ -11,6 +11,8 @@
 
 // whether to write the sg's graph data to the file
 //#define __WRITE_SG__
+#define _OUTPUT_MAX_DEGREE_
+//#define _OUTPUT_G_DEG_TABLE_
 
 using std::vector;
 using std::map;
@@ -44,6 +46,19 @@ main(int argc, char **argv)
     graph_t g;
     // you should use ddmap to build the graph data
     init_g_withddmap(g, gfile, ddmap);
+
+#ifdef _OUTPUT_MAX_DEGREE_
+    LOG("maximum degree: %d\n", g.maximum_degree());
+#endif
+
+#ifdef _OUTPUT_G_DEG_TABLE_
+    string s(argv[2]);
+    s = s+".degree.table";
+    FILE *gdegfile = fopen(s.c_str(), "w+");
+    g.write_degree_table(gdegfile);
+    fclose(gdegfile);
+#endif
+
     LOG("there are %d degeneracy vertex\n", ddvertex.size());
     LOG("the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){

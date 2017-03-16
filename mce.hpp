@@ -39,6 +39,7 @@ struct graph_t
         vid vertex_num() const;
         void write_graph_adjlist(FILE *gfile) const;
         void write_degree_table(FILE *dfile) const;
+        vid maximum_degree() const;
         ~graph_t();
 
     vtype *data;
@@ -137,6 +138,18 @@ vid
 graph_t::vertex_num() const
 {
     return nodenum;
+}
+
+vid
+graph_t::maximum_degree() const 
+{
+    vid maxdeg = 0;
+    for(vid i = 0; i < nodenum; ++i)
+    {
+        if( data[i].deg > maxdeg )
+            maxdeg = data[i].deg;
+    }
+    return maxdeg;
 }
 
 void
