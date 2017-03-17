@@ -194,7 +194,6 @@ get_vertex_dd_map(vector<vid> &ddvertex, vid& degeneracy, map<vid, vid> &ddmap, 
             degree = (10 * degree) + int(*linebeg) - 48;
         }
         if( degree > degeneracy ){
-            LOG("degree: %d, degeneracy: %d\n", degree, degeneracy);
             ddvertex.clear();
             ddvertex.push_back(vertex);
             degeneracy = degree;
