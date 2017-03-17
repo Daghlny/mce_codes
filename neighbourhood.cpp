@@ -69,8 +69,9 @@ main(int argc, char **argv)
     gd.SetObject();
     Pointer("/nodenum").Set(gd, g.nodenum);
     Pointer("/edgenum").Set(gd, edgenum);
-    Pointer("/degeneracy").Set(gd, degeneracy);
     Pointer("/average degree").Set(gd, edgenum/g.nodenum*2);
+    Pointer("/degeneracy").Set(gd, degeneracy);
+    Pointer("/ddVertex Count").Set(gd, ddvertex.size());
     sfilename += ".json";
     dfilename += ".json";
 #else
