@@ -14,12 +14,12 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/pointer.h"
+#include "rapidjson/filewritestream.h"
 
 // whether to write the sg's graph data to the file
 //#define __WRITE_SG__
 
 /* the macros below should be activated only one in meantime */
-//#define _USER_INPUT_
 #define _AUTO_EXPERIMENT_
 
 using std::vector;
@@ -47,7 +47,8 @@ main(int argc, char **argv)
     FILE *gfile  = fopen(argv[2], "r+");
     string sfilename(argv[2]);
     sfilename += ".statistics";
-    FILE *sfile  = fopen(sfilename.c_str(), "w+");
+    string dfilename(argv[2]);
+    dfilename += ".sg";
 
     inputbuffer ddbuffer(ddfile);
 
@@ -62,6 +63,7 @@ main(int argc, char **argv)
     init_g_withddmap(g, gfile, ddmap);
     vid edgenum = g.edge_num();
 
+#ifdef _AUTO_EXPERIMENT_
     Document gd;
     Document::AllocatorType &gd_allocator = gd.GetAllocator();
     gd.SetObject();
@@ -69,11 +71,18 @@ main(int argc, char **argv)
     Pointer("/edgenum").Set(gd, edgenum);
     Pointer("/degeneracy").Set(gd, degeneracy);
     Pointer("/average degree").Set(gd, edgenum/g.nodenum*2);
-
+    sfilename += ".json";
+    dfilename += ".json";
+#else
     g.write_graph_statistics(sfile);
     fprintf(sfile, "\"degeneracy\": %d,\n", degeneracy);
+#endif
 
-#ifdef _USER_INPUT_
+    FILE *sfile  = fopen(sfilename.c_str(), "w+");
+    FILE *dfile  = fopen(dfilename.c_str(), "w+");
+
+#ifndef _AUTO_EXPERIMENT_
+
     LOG("there are %d degeneracy vertex\n", ddvertex.size());
     LOG("the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){
@@ -98,22 +107,15 @@ main(int argc, char **argv)
         for(vIt it = cc.begin(); it != cc.end(); ++it)
             printf(" %d ", *it);
         printf("\n");
+        //sg.write_degree_table(ddNfile);
     }while(1);
-#endif
-
-#ifdef _AUTO_EXPERIMENT_
-    
+#else 
     Document sgd;
     sgd.SetObject();
     Document::AllocatorType &sg_allocator = sgd.GetAllocator();
     Value sgs(kArrayType);
-    //sgd.AddMember("sginfo", sgs, sg_allocator);
 
-    string ddNfilename(argv[2]);
-    ddNfilename += ".neighbourhood";
-    FILE *ddNfile = fopen(ddNfilename.c_str(), "w+");
     LOG("begin recording degeneracy vertices' neighbourhood\n");
-    fprintf(sfile, "###############degeneracy vertex neighbourhood\n");
     Value nbhs(kArrayType);
     for( vIt it = ddvertex.begin(); it != ddvertex.end(); ++it) 
     {
@@ -143,17 +145,21 @@ main(int argc, char **argv)
         sgv.AddMember("degree Table", degTable, sg_allocator);
         sgs.PushBack(sgv, sg_allocator);
 
-        fprintf(ddNfile, "originID: %d,degeneracyID:%d,edgenum:%d\n", *it, vertex, sg_edge_num);
-        sg.write_degree_table(ddNfile);
     }
     sgd.AddMember("degeneracy neighbourhood", sgs, sg_allocator);
     gd.AddMember("degeneracy neighbourhood", nbhs, gd_allocator);
-#endif
 
-    StringBuffer buffer;
-    PrettyWriter<StringBuffer> writer(buffer);
-    sgd.Accept(writer);
-    cout << buffer.GetString() << endl;
+    char writeBuffer[65536];
+
+    FileWriteStream sfstream(sfile, writeBuffer, sizeof(writeBuffer));
+    PrettyWriter<FileWriteStream> swriter(sfstream);
+    gd.Accept(swriter);
+
+    FileWriteStream dfstream(dfile, writeBuffer, sizeof(writeBuffer));
+    Writer<FileWriteStream> dwriter(dfstream);
+    sgd.Accept(dwriter);
+
+#endif
 
     fclose(ddfile);
     fclose(gfile);
