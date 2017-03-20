@@ -5,7 +5,7 @@
 #include <string>
 #include <cstdio>
 
-#define BUFF_SIZE 1024*1024
+#define BUFF_SIZE 512*1024*1024
 
 using std::string;
 

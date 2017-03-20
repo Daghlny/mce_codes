@@ -16,12 +16,14 @@
 #define LOG(fmt, ...) \
     printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
-#define vid_fmt %"PRIu64"
+//#define vid_fmt %"PRIu64"
+#define vid_fmt %ld
 
 using std::vector;
 using std::map;
 
-typedef uint64_t vid;
+typedef int64_t vid;
+//typedef int vid;
 typedef vector<vid>::iterator vIt;
 
 struct vtype
