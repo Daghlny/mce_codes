@@ -7,6 +7,7 @@
 #include <vector>
 #include <cstring>
 #include <map>
+#include <cstdint>
 #include "inputbuffer.hpp"
 
 // whether to write the graph's degree list to the file
@@ -15,10 +16,12 @@
 #define LOG(fmt, ...) \
     printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
+#define vid_fmt %"PRIu64"
+
 using std::vector;
 using std::map;
 
-typedef int vid;
+typedef uint64_t vid;
 typedef vector<vid>::iterator vIt;
 
 struct vtype
@@ -122,12 +125,12 @@ graph_t::edge_num() const
     {
 #ifdef __OUTPUT__GDEG__
         if( data[pos].deg == 371 ) totalnum++;
-        fprintf(degfile,"%d:%d\n", pos, data[pos].deg);
+        fprintf(degfile,"vid_fmt:vid_fmt\n", pos, data[pos].deg);
 #endif
         edgeNum += data[pos].deg;
     }
 #ifdef __OUTPUT__GDEG__ 
-    LOG("total adjacent vertex: %d\n", totalnum);
+    LOG("total adjacent vertex: vid_fmt\n", totalnum);
     fclose(degfile);
 #endif
 
@@ -156,12 +159,12 @@ graph_t::maximum_degree() const
 void
 graph_t::write_graph_adjlist(FILE *gfile) const
 {
-    fprintf(gfile, "%d\n", nodenum);
+    fprintf(gfile, "vid_fmt\n", nodenum);
     for(vid i = 0; i < nodenum; ++i)
     {
-        fprintf(gfile, "%d,%d", i, data[i].deg);
+        fprintf(gfile, "vid_fmt,vid_fmt", i, data[i].deg);
         for( vid cnt = 0; cnt < data[i].deg; ++cnt )
-            fprintf(gfile, ":%d", data[i].nbv[cnt]);
+            fprintf(gfile, ":vid_fmt", data[i].nbv[cnt]);
         fprintf(gfile, "\n");
     }
 }
@@ -169,9 +172,9 @@ graph_t::write_graph_adjlist(FILE *gfile) const
 void 
 graph_t::write_graph_statistics(FILE *sfile) const
 {
-    fprintf(sfile, "\"vertex count\": %d\n", nodenum);
-    fprintf(sfile, "\"edge count\": %d\n", edge_num());
-    fprintf(sfile, "\"maximum degree\": %d\n", maximum_degree());
+    fprintf(sfile, "\"vertex count\": vid_fmt\n", nodenum);
+    fprintf(sfile, "\"edge count\": vid_fmt\n", edge_num());
+    fprintf(sfile, "\"maximum degree\": vid_fmt\n", maximum_degree());
 }
 
 void
@@ -180,7 +183,7 @@ graph_t::write_degree_table(FILE *dfile) const
     fprintf(dfile, "#vertexID:degree\n");
     for( vid i = 0; i < nodenum; ++i )
     {
-        fprintf(dfile, "%d:%d\n", i, data[i].deg);    
+        fprintf(dfile, "vid_fmt:vid_fmt\n", i, data[i].deg);    
     }
 }
 
@@ -197,7 +200,7 @@ graph_t::~graph_t()
 void get_vertex_dd_map(vector<vid>&, vid&, map<vid,vid>&, inputbuffer&);
 void get_neighbor_cc(graph_t& , vid, vector<vid>&);
 vid  binary_search(vtype&, vid);
-int  wcc(graph_t&, vector<int>&);
+int  wcc(graph_t&, vector<vid>&);
 void mark_cc(graph_t&, vid, int *, int);
 void get_ddneibor_sg(graph_t &, graph_t &, vid);
 void init_g_withddmap(graph_t &g, FILE *gfile, map<vid,vid> &ddmap);

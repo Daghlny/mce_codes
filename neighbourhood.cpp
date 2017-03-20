@@ -70,13 +70,14 @@ main(int argc, char **argv)
     Pointer("/nodenum").Set(gd, g.nodenum);
     Pointer("/edgenum").Set(gd, edgenum);
     Pointer("/average degree").Set(gd, edgenum/g.nodenum*2);
+    Pointer("/maximum degree").Set(gd, g.maximum_degree());
     Pointer("/degeneracy").Set(gd, degeneracy);
     Pointer("/ddVertex Count").Set(gd, ddvertex.size());
     sfilename += ".json";
     dfilename += ".json";
 #else
     g.write_graph_statistics(sfile);
-    fprintf(sfile, "\"degeneracy\": %d,\n", degeneracy);
+    fprintf(sfile, "\"degeneracy\": vid_fmt,\n", degeneracy);
 #endif
 
     FILE *sfile  = fopen(sfilename.c_str(), "w+");
@@ -87,18 +88,18 @@ main(int argc, char **argv)
     LOG("there are %d degeneracy vertex\n", ddvertex.size());
     LOG("the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){
-        printf(" %d ", *it);
+        printf(" vid_fmt ", *it);
     }
     printf("\n");
 
     do{
         printf("your vertex id: ");
         vid vertex = 0;
-        scanf("%d", &vertex);
+        scanf("vid_fmt", &vertex);
         if( vertex < 0 ) break;
         if( vertex > g.nodenum ) exit(0);
         vertex = ddmap[vertex];
-        LOG("your vertex's current id: %d\n", vertex);
+        LOG("your vertex's current id: vid_fmt\n", vertex);
         vector<vid> cc;
         
         get_neighbor_cc(g, vertex, cc);
@@ -106,7 +107,7 @@ main(int argc, char **argv)
         LOG("CC number: %d\n", cc.size());
         LOG("the size of connected components: ");
         for(vIt it = cc.begin(); it != cc.end(); ++it)
-            printf(" %d ", *it);
+            printf(" vid_fmt ", *it);
         printf("\n");
         //sg.write_degree_table(ddNfile);
     }while(1);
@@ -125,12 +126,14 @@ main(int argc, char **argv)
         graph_t sg;
         get_ddneibor_sg(g, sg, vertex);
         vid sg_edge_num = sg.edge_num();
+        get_neighbor_cc(g, vertex, cc);
 
         Value vsg(kObjectType);
         vsg.AddMember("originID", *it, gd_allocator);
         vsg.AddMember("degeneracyID", vertex, gd_allocator);
         vsg.AddMember("edgenum", sg_edge_num, gd_allocator);
         vsg.AddMember("average degree", sg_edge_num/degeneracy*2, gd_allocator);
+        vsg.AddMember("CC count", cc.size(), gd_allocator);
 
         nbhs.PushBack(vsg, gd_allocator);
 
@@ -139,6 +142,7 @@ main(int argc, char **argv)
         sgv.AddMember("degeneracyID", vertex, sg_allocator);
         sgv.AddMember("edgenum", sg_edge_num, sg_allocator);
         sgv.AddMember("average degree", sg_edge_num/degeneracy*2, sg_allocator);
+        sgv.AddMember("CC count", cc.size(), sg_allocator);
         
         Value degTable(kArrayType);
         for(int sgi = 0; sgi < sg.nodenum; ++sgi)
@@ -225,7 +229,7 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
     sg.write_graph_adjlist(sgfile);
 #endif
 #ifdef _USER_INPUT_
-    LOG("sg's edge number: %d\n", sg.edge_num());
+    LOG("sg's edge number: vid_fmt\n", sg.edge_num());
 #endif
     int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
@@ -309,7 +313,7 @@ binary_search(vtype &vl, vid v)
  */
 //FIXed: @return value != cc.size()
 int
-wcc(graph_t &g, vector<int> &cc)
+wcc(graph_t &g, vector<vid> &cc)
 {
     int *labels = (int *)malloc(sizeof(int) * g.nodenum);
     memset(labels, 0, sizeof(int) * g.nodenum);

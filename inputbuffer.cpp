@@ -104,6 +104,14 @@ inputbuffer::getsize(){
     return size;
 }
 
+void
+inputbuffer::clear()
+{
+    free(buff);
+    buff = curpos = endpos = NULL;
+    size = 0;
+}
+
 inputbuffer::~inputbuffer()
 {
     free(buff);
