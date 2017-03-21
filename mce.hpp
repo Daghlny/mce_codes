@@ -13,11 +13,11 @@
 // whether to write the graph's degree list to the file
 //#define __OUTPUT__GDEG__
 
+#define vid_fmt %lld
 #define LOG(fmt, ...) \
     printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 //#define vid_fmt %"PRIu64"
-#define vid_fmt %ld
 
 using std::vector;
 using std::map;
