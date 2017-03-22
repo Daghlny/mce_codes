@@ -10,9 +10,6 @@
 #include <cstdint>
 #include "inputbuffer.hpp"
 
-// whether to write the graph's degree list to the file
-//#define __OUTPUT__GDEG__
-
 #define vid_fmt %lld
 #define LOG(fmt, ...) \
     printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
@@ -117,24 +114,12 @@ graph_t::operator[] (const vid index) const
 vid
 graph_t::edge_num() const
 {
-    int edgeNum = 0;
+    vid edgeNum = 0;
 
-#ifdef __OUTPUT__GDEG__
-    int totalnum = 0;
-    FILE *degfile = fopen("./deg.data", "wr+");
-#endif
     for( int pos = 0; pos < nodenum; ++pos )
     {
-#ifdef __OUTPUT__GDEG__
-        if( data[pos].deg == 371 ) totalnum++;
-        fprintf(degfile,"vid_fmt:vid_fmt\n", pos, data[pos].deg);
-#endif
         edgeNum += data[pos].deg;
     }
-#ifdef __OUTPUT__GDEG__ 
-    LOG("total adjacent vertex: vid_fmt\n", totalnum);
-    fclose(degfile);
-#endif
 
     assert(edgeNum % 2 == 0);
     return edgeNum / 2;
