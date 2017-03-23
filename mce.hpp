@@ -10,11 +10,10 @@
 #include <cstdint>
 #include "inputbuffer.hpp"
 
-#define vid_fmt %lld
 #define LOG(fmt, ...) \
     printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
-//#define vid_fmt %"PRIu64"
+//#define %lld %"PRIu64"
 
 using std::vector;
 using std::map;
@@ -146,12 +145,12 @@ graph_t::maximum_degree() const
 void
 graph_t::write_graph_adjlist(FILE *gfile) const
 {
-    fprintf(gfile, "vid_fmt\n", nodenum);
+    fprintf(gfile, "%lld\n", nodenum);
     for(vid i = 0; i < nodenum; ++i)
     {
-        fprintf(gfile, "vid_fmt,vid_fmt", i, data[i].deg);
+        fprintf(gfile, "%lld,%lld", i, data[i].deg);
         for( vid cnt = 0; cnt < data[i].deg; ++cnt )
-            fprintf(gfile, ":vid_fmt", data[i].nbv[cnt]);
+            fprintf(gfile, ":%lld", data[i].nbv[cnt]);
         fprintf(gfile, "\n");
     }
 }
@@ -159,9 +158,9 @@ graph_t::write_graph_adjlist(FILE *gfile) const
 void 
 graph_t::write_graph_statistics(FILE *sfile) const
 {
-    fprintf(sfile, "\"vertex count\": vid_fmt\n", nodenum);
-    fprintf(sfile, "\"edge count\": vid_fmt\n", edge_num());
-    fprintf(sfile, "\"maximum degree\": vid_fmt\n", maximum_degree());
+    fprintf(sfile, "\"vertex count\": %lld\n", nodenum);
+    fprintf(sfile, "\"edge count\": %lld\n", edge_num());
+    fprintf(sfile, "\"maximum degree\": %lld\n", maximum_degree());
 }
 
 void
@@ -170,7 +169,7 @@ graph_t::write_degree_table(FILE *dfile) const
     fprintf(dfile, "#vertexID:degree\n");
     for( vid i = 0; i < nodenum; ++i )
     {
-        fprintf(dfile, "vid_fmt:vid_fmt\n", i, data[i].deg);    
+        fprintf(dfile, "%lld:%lld\n", i, data[i].deg);    
     }
 }
 

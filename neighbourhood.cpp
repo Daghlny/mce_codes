@@ -77,7 +77,7 @@ main(int argc, char **argv)
     dfilename += ".json";
 #else
     g.write_graph_statistics(sfile);
-    fprintf(sfile, "\"degeneracy\": vid_fmt,\n", degeneracy);
+    fprintf(sfile, "\"degeneracy\": %lld,\n", degeneracy);
 #endif
 
     FILE *sfile  = fopen(sfilename.c_str(), "w+");
@@ -88,18 +88,18 @@ main(int argc, char **argv)
     LOG("there are %d degeneracy vertex\n", ddvertex.size());
     LOG("the degeneracy vertex:");
     for(vIt it = ddvertex.begin(); it != ddvertex.end(); ++it){
-        printf(" vid_fmt ", *it);
+        printf(" %lld ", *it);
     }
     printf("\n");
 
     do{
         printf("your vertex id: ");
         vid vertex = 0;
-        scanf("vid_fmt", &vertex);
+        scanf("%lld", &vertex);
         if( vertex < 0 ) break;
         if( vertex > g.nodenum ) exit(0);
         vertex = ddmap[vertex];
-        LOG("your vertex's current id: vid_fmt\n", vertex);
+        LOG("your vertex's current id: %lld\n", vertex);
         vector<vid> cc;
         
         get_neighbor_cc(g, vertex, cc);
@@ -107,7 +107,7 @@ main(int argc, char **argv)
         LOG("CC number: %d\n", cc.size());
         LOG("the size of connected components: ");
         for(vIt it = cc.begin(); it != cc.end(); ++it)
-            printf(" vid_fmt ", *it);
+            printf(" %lld ", *it);
         printf("\n");
         //sg.write_degree_table(ddNfile);
     }while(1);
@@ -115,7 +115,8 @@ main(int argc, char **argv)
     Document sgd;
     sgd.SetObject();
     Document::AllocatorType &sg_allocator = sgd.GetAllocator();
-    Value sgs(kArrayType);
+    sgd.AddMember("degeneracy", degeneracy, sg_allocator);
+    Value dNarray(kArrayType);
 
     LOG("begin recording degeneracy vertices' neighbourhood\n");
     Value nbhs(kArrayType);
@@ -128,30 +129,25 @@ main(int argc, char **argv)
         vid sg_edge_num = sg.edge_num();
         get_neighbor_cc(g, vertex, cc);
 
-        Value vsg(kObjectType);
+        Value vsg(kObjectType);     // the sg info in gdocument
         vsg.AddMember("originID", *it, gd_allocator);
         vsg.AddMember("degeneracyID", vertex, gd_allocator);
         vsg.AddMember("edgenum", sg_edge_num, gd_allocator);
         vsg.AddMember("average degree", sg_edge_num/degeneracy*2, gd_allocator);
         vsg.AddMember("CC count", cc.size(), gd_allocator);
 
+        Value sgv(kObjectType);     // the sg info in sgdocument
+        sgv.CopyFrom(vsg, gd_allocator);
         nbhs.PushBack(vsg, gd_allocator);
-
-        Value sgv(kObjectType);
-        sgv.AddMember("originID", *it, sg_allocator);
-        sgv.AddMember("degeneracyID", vertex, sg_allocator);
-        sgv.AddMember("edgenum", sg_edge_num, sg_allocator);
-        sgv.AddMember("average degree", sg_edge_num/degeneracy*2, sg_allocator);
-        sgv.AddMember("CC count", cc.size(), sg_allocator);
         
         Value degTable(kArrayType);
         for(int sgi = 0; sgi < sg.nodenum; ++sgi)
             degTable.PushBack(sg[sgi].deg, sg_allocator);
         sgv.AddMember("degree Table", degTable, sg_allocator);
-        sgs.PushBack(sgv, sg_allocator);
+        dNarray.PushBack(sgv, sg_allocator);
 
     }
-    sgd.AddMember("degeneracy neighbourhood", sgs, sg_allocator);
+    sgd.AddMember("degeneracy neighbourhood", dNarray, sg_allocator);
     gd.AddMember("degeneracy neighbourhood", nbhs, gd_allocator);
 
     char writeBuffer[65536];
@@ -229,7 +225,7 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
     sg.write_graph_adjlist(sgfile);
 #endif
 #ifdef _USER_INPUT_
-    LOG("sg's edge number: vid_fmt\n", sg.edge_num());
+    LOG("sg's edge number: %lld\n", sg.edge_num());
 #endif
     int cc_num = wcc(sg, cc);
     assert(cc_num == cc.size());
