@@ -20,14 +20,14 @@ if __name__ == '__main__':
         filepath = datapath+dataset
         files = os.listdir(filepath)
         pattern = re.compile(".+statistics.json")
-        filename = ""
+        sfilename = ""
         for fname in files:
-            filename = pattern.findall(fname)
-            if len(filename) != 0:
-                filename = filename[0]
+            sfilename = pattern.findall(fname)
+            if len(sfilename) != 0:
+                sfilename = sfilename[0]
                 break
 
-        datafilename = datapath+dataset+"/"+filename
+        datafilename = datapath+dataset+"/"+sfilename
         dfile = open(datafilename, "r+")
         data  = json.load(dfile)
         nodenum = data["nodenum"]
