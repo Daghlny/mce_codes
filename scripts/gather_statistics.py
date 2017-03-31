@@ -7,44 +7,72 @@ import sys
 import re
 
 datapath = ""
-datasets = ["email-euall"]
+datasets = ["as-skitter"]
+
+def avg_degree(nodenum, edgenum):
+    return (edgenum*2) / nodenum
+
+def get_stat_json(dataset):
+    filepath = datapath + dataset
+    files    = os.listdir(filepath)
+    gpattern     = re.compile(".+statistics.json")
+    sgpattern    = re.compile(".+sg.json")
+    gfilename  = ""
+    sgfilename = ""
+    gflag = 0
+    sgflag = 0
+    for fname in files:
+        if gflag == 1 and sgflag == 1:
+            break
+        if gflag == 0:
+            gfilename = gpattern.findall(fname)
+        if sgflag == 0:
+            sgfilename = sgpattern.findall(fname)
+        if len(gfilename) != 0 and gflag == 0:
+            gfilename = gfilename[0]
+            gflag = 1
+        if len(sgfilename) != 0 and sgflag == 0:
+            sgfilename = sgfilename[0]
+            sgflag = 1
+    if (gfilename == "") or (sgfilename == ""):
+        print("error in get_stat_json")
+    gfilename = filepath + "/" + gfilename
+    sgfilename = filepath + "/" + sgfilename
+    gfile = open(gfilename, "r+")
+    sgfile = open(sgfilename, "r+")
+
+    gjson = json.load(gfile)
+    sgjson = json.load(sgfile)
+    return gjson, sgjson
+
+def vnum_could_delete_from_sg(dd, degtable):
+    vnum = 0;
+    for d in degtable:
+        if d <= 1 | d == dd-1:
+            vnum += 1
+    return vnum
+    
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 :
-        print("Pragram DataFile")
+        print("Pragram DataFile.csv")
         exit()
-    sfile = open(sys.argv[1], "w+")
+    resfile = open(sys.argv[1], "w+")
+    resfile.write("dataset,nodenum,edgenum,avgdeg,maxdeg,degeneracy,ddVertex num,nbh edgenum,nbh avgdeg,cc,nbh newsize\n")
 
     for dataset in datasets:
         print("!script log! "+dataset)
-        filepath = datapath+dataset
-        files = os.listdir(filepath)
-        pattern = re.compile(".+statistics.json")
-        sfilename = ""
-        for fname in files:
-            sfilename = pattern.findall(fname)
-            if len(sfilename) != 0:
-                sfilename = sfilename[0]
-                break
-
-        datafilename = datapath+dataset+"/"+sfilename
-        dfile = open(datafilename, "r+")
-        data  = json.load(dfile)
-        nodenum = data["nodenum"]
-        edgenum = data["edgenum"]
-        maxdeg  = data["maximum degree"]
-        dVnum = data["ddVertex Count"]
-        dd = data["degeneracy"]
-        dN_avgdegs = []
-        for dN in data["degeneracy neighbourhood"]:
-            avgdeg = dN["average degree"]
-            dN_avgdegs.append(avgdeg)
-        dN_avgdeg = sum(dN_avgdegs) / float(len(dN_avgdegs))
-        sfile.write("graph:"+dataset+"\n")
-        sfile.write("vertex:"+str(nodenum)+"\n")
-        sfile.write("edge:"+str(edgenum)+"\n")
-        sfile.write("maxdeg:"+str(maxdeg)+"\n")
-        sfile.write("degeneracy:"+str(dd)+"\n")
-        sfile.write("dNavgdeg:"+str(dN_avgdeg)+"\n")
-        sfile.write("\n")
+        gjson, sgjson = get_stat_json(dataset)
+        resfile.write(dataset+","+str(gjson["nodenum"])+","+str(gjson["edgenum"])+","+str(gjson["average degree"])+","+str(gjson["maximum degree"])+","+str(gjson["degeneracy"])+","+str(gjson["ddVertex Count"])+",")
+        degeneracy = gjson["degeneracy"]
+        dNedgenums = ""
+        dNavgdegs  = ""
+        dNccnums   = ""
+        dNnewsizes = ""
+        for dN in sgjson["degeneracy neighbourhood"]:
+            dNedgenums += str(dN["edgenum"])+"|"
+            dNavgdegs  += str(dN["average degree"])+"|"
+            dNccnums   += str(dN["CC count"])+"|"
+            dNnewsizes   += str(degeneracy-vnum_could_delete_from_sg(degeneracy, dN["degree Table"]))+"|"
+        resfile.write(dNedgenums[0:-1]+","+dNavgdegs[0:-1]+","+dNccnums[0:-1] + "," + dNnewsizes[0:-1]+"\n")
 
