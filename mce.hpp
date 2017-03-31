@@ -42,6 +42,8 @@ struct graph_t
         void write_degree_table(FILE *dfile) const;
         void write_graph_statistics(FILE *sfile) const;
         vid maximum_degree() const;
+        vid count_smalldeg_vnum(vid threshold) const;
+        vid count_maxdeg_vnum() const;
         ~graph_t();
 
     vtype *data;
@@ -171,6 +173,31 @@ graph_t::write_degree_table(FILE *dfile) const
     {
         fprintf(dfile, "%lld:%lld\n", i, data[i].deg);    
     }
+}
+
+vid
+graph_t::count_smalldeg_vnum(vid threshold) const
+{
+    vid vnum = 0;
+    for(int id = 0; id < nodenum; ++id)
+    {
+        if(data[id].deg <= threshold)
+            vnum++;
+    }
+    return vnum;
+}
+
+vid  
+graph_t::count_maxdeg_vnum() const
+{
+    vid maxdeg = nodenum - 1;
+    vid vnum = 0;
+    for(int id = 0; id < nodenum; ++id)
+    {
+        if(data[id].deg == maxdeg)
+            vnum++;
+    }
+    return vnum;
 }
 
 graph_t::~graph_t()

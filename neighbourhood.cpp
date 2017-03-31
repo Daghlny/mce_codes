@@ -241,8 +241,7 @@ get_neighbor_cc(graph_t &g, vid vertex, vector<vid> &cc)
 void    
 get_ddneibor_sg(graph_t &g, graph_t &sg, vid vertex)
 {
-    //FIX:you should ignore the vertex whose ID is smaller than @vertex
-    
+    //FIXed:you should ignore the vertex whose ID is smaller than @vertex
     //WRANING:this loop relies on the g.data[vertex].nbv's sorted order
     std::sort(g.data[vertex].nbv, g.data[vertex].nbv+g.data[vertex].deg);
     vid smaller_vnum = 0;
