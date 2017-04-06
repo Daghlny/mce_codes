@@ -6,8 +6,31 @@ import os
 import sys
 import re
 
-datapath = ""
+datapath = "/bigdata/lyn-data/"
 datasets = ["as-skitter"]
+
+class Neighbourhood:
+    def __init__(self, _v, _e, _avg, _cc, _dvnum):
+        self.E = _e
+        self.V = _v
+        self.avgdeg = _avg
+        self.cc = _cc
+        self.dvnum = _dvnum # the vertex count could be deleted
+
+    def updateAvgDeg(self):
+        self.avgdeg = self.E * 2 / self.V
+
+    def newsize(self):
+        return self.V - self.dvnum
+
+    def csvStr(self):
+        dNedgenum = str(self.E)
+        dNavgdeg = str(self.avgdeg)
+        dNccnum   = str(self.cc)
+        dNnewsize = str(self.V - self.dvnum)
+        resStr = dNedgenum + "," + dNavgdeg + "," + dNccnum + "," + dNnewsize
+        return resStr
+
 
 def avg_degree(nodenum, edgenum):
     return (edgenum*2) / nodenum
@@ -54,9 +77,13 @@ def vnum_could_delete_from_sg(dd, degtable):
     
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 :
-        print("Pragram DataFile.csv")
+    if len(sys.argv) < 2 :
+        print("Pragram DataFile.csv [nbhflag]")
+        print("nbhflag=1 : all nbh's statistics\nnbhflag=2 : only average statitics\nnbhflag=3 : the max and min statistic")
         exit()
+    nbhflag = 1;
+    if len(sys.argv) == 3:
+        nbhflag = int(sys.argv[2])
     resfile = open(sys.argv[1], "w+")
     resfile.write("dataset,nodenum,edgenum,avgdeg,maxdeg,degeneracy,ddVertex num,nbh edgenum,nbh avgdeg,cc,nbh newsize\n")
 
@@ -65,14 +92,13 @@ if __name__ == '__main__':
         gjson, sgjson = get_stat_json(dataset)
         resfile.write(dataset+","+str(gjson["nodenum"])+","+str(gjson["edgenum"])+","+str(gjson["average degree"])+","+str(gjson["maximum degree"])+","+str(gjson["degeneracy"])+","+str(gjson["ddVertex Count"])+",")
         degeneracy = gjson["degeneracy"]
-        dNedgenums = ""
-        dNavgdegs  = ""
-        dNccnums   = ""
-        dNnewsizes = ""
+
+        maxDNEdgeNum = 0;
+        dstDN = Neighbourhood(0,0,0,0,0);
         for dN in sgjson["degeneracy neighbourhood"]:
-            dNedgenums += str(dN["edgenum"])+"|"
-            dNavgdegs  += str(dN["average degree"])+"|"
-            dNccnums   += str(dN["CC count"])+"|"
-            dNnewsizes   += str(degeneracy-vnum_could_delete_from_sg(degeneracy, dN["degree Table"]))+"|"
-        resfile.write(dNedgenums[0:-1]+","+dNavgdegs[0:-1]+","+dNccnums[0:-1] + "," + dNnewsizes[0:-1]+"\n")
+            nb = Neighbourhood(degeneracy, dN["edgenum"], dN["average degree"], dN["CC count"], vnum_could_delete_from_sg(degeneracy, dN["degree Table"]))
+            if nb.E > maxDNEdgeNum:
+                maxDNEdgeNum = nb.E
+                dstDN = nb
+        resfile.write(dstDN.csvStr() + "\n")
 
