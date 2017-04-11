@@ -1,4 +1,10 @@
 
+/*
+ * Input a undirected graph data file, and it will compute the degeneracy order.
+ * Then it will record the statistics of neighborhood with degeneracy vertices.
+ * The output data format is json
+ */
+
 #include <cstdio>
 #include <map>
 #include <vector>

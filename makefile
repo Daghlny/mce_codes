@@ -7,7 +7,7 @@ GCCFLAGS= -O3 -std=$(CPPVERSION)
 COMPILER= g++
 
 asg: neighbourhood.cpp inputbuffer.cpp $(HEADERS)
-	$(COMPILER) $(GCCFLAGS) $(INCLUDES) ./neighbourhood.cpp ./inputbuffer.cpp -o asg.out
+	$(COMPILER) $(GCCFLAGS) $(INCLUDES) ./neighbourhood.cpp ./inputbuffer.cpp ./graph.cpp -o asg.out
 mce: mce.cpp inputbuffer.cpp $(HEADERS)
 	$(COMPILER) $(GCCFLAGS) ./mce.cpp ./inputbuffer.cpp -o mce.out
 debug: neighbourhood.cpp inputbuffer.cpp $(HEADERS)
