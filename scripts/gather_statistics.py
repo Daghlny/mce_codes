@@ -28,8 +28,12 @@ class Neighbourhood:
         dNavgdeg = str(self.avgdeg)
         dNccnum   = str(self.cc)
         dNnewsize = str(self.V - self.dvnum)
-        resStr = dNedgenum + "," + dNavgdeg + "," + dNccnum + "," + dNnewsize
+        resStr = dNedgenum + "," + dNavgdeg + "," + dNccnum + "," + str(self.density()) + "," + dNnewsize
         return resStr
+
+    def density(self, roundnum = 3):
+        maxedges = float( self.V * (self.V-1) / 2 )
+        return round(float(self.E / maxedges), roundnum)
 
 
 def avg_degree(nodenum, edgenum):
@@ -85,7 +89,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         nbhflag = int(sys.argv[2])
     resfile = open(sys.argv[1], "w+")
-    resfile.write("dataset,nodenum,edgenum,avgdeg,maxdeg,degeneracy,ddVertex num,nbh edgenum,nbh avgdeg,cc,nbh newsize\n")
+    resfile.write("dataset,nodenum,edgenum,avgdeg,maxdeg,degeneracy,ddVertex num,nbh edgenum,nbh avgdeg,cc,density,nbh newsize\n")
 
     for dataset in datasets:
         print("!script log! "+dataset)
