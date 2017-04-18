@@ -89,12 +89,14 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         nbhflag = int(sys.argv[2])
     resfile = open(sys.argv[1], "w+")
-    resfile.write("dataset,nodenum,edgenum,avgdeg,maxdeg,degeneracy,ddVertex num,nbh edgenum,nbh avgdeg,cc,density,nbh newsize\n")
+    resfile.write("dataset,nodenum,edgenum,avgdeg,maxdeg,density,degeneracy,ddVertexNum,NBHedgenum,NBHavgdeg, NBHcc,NBHdensity,NBHnewsize\n")
 
     for dataset in datasets:
         print("!script log! "+dataset)
         gjson, sgjson = get_stat_json(dataset)
-        resfile.write(dataset+","+str(gjson["nodenum"])+","+str(gjson["edgenum"])+","+str(gjson["average degree"])+","+str(gjson["maximum degree"])+","+str(gjson["degeneracy"])+","+str(gjson["ddVertex Count"])+",")
+        density = float(gjson["edgenum"]) / (float(gjson["nodenum"]) * float(gjson["nodenum"] - 1) / 2)
+        density = round(density, 5)
+        resfile.write(dataset+","+str(gjson["nodenum"])+","+str(gjson["edgenum"])+","+str(gjson["average degree"])+","+str(gjson["maximum degree"])+","+str(density)+","+str(gjson["degeneracy"])+","+str(gjson["ddVertex Count"])+",")
         degeneracy = gjson["degeneracy"]
 
         maxDNEdgeNum = 0;
