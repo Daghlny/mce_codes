@@ -16,4 +16,5 @@ bk: bkMain.cpp inputbuffer.cpp bk.cpp $(HEADERS)
 	$(COMPILER) $(GCCFLAGS) ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o bk.out
 bkdebug: bkMain.cpp inputbuffer.cpp bk.cpp $(HEADERS)
 	$(COMPILER) $(GDBFLAGS) ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o debug_bk.out
-
+mat: bitMatrix.cpp bitMatrix.hpp main.cpp
+	$(COMPILER) $(GDBFLAGS) ./bitMatrix.cpp ./main.cpp -o debug_bitMat.out
