@@ -69,8 +69,9 @@ bitVector::all(int flag)
     return true;
 }
 
+// get the first of bit which is @flag
 int 
-bitVector::any(int flag)
+bitVector::first(int flag)
 {
     if (flag == 0)
     {
@@ -80,7 +81,7 @@ bitVector::any(int flag)
             if ( head[i] == ALLONE ) continue;
             for (int bit = ebit - 1; bit >= 0; --bit)
             {
-                if ( head[i] >> bit == 0 )
+                if ( (head[i] >> bit) & (ALLONE >> (ebit - bit)) == 0 )
                     return (i * ebit + (ebit - bit));
             }
         }
@@ -100,6 +101,35 @@ bitVector::any(int flag)
     return -1;
 }
 
+int 
+bitVector::last(int flag)
+{
+    if (flag == 0)
+    {
+        for (int i = num-1; i >= 0; --i)
+        {
+            if (head[i] == ALLONE) continue;
+            for (int bit = ebit-1; bit >= 0; --bit)
+            {
+                if ( (head[i] << bit) & (ALLONE >> bit) == 0)
+                    return (i * ebit + bit);
+            }
+        }
+    } else
+    {
+        // search for last of "1"
+        for (int i = num-1; i >= 0; --i)
+        {
+            if (head[i] == ALLZERO) continue;
+            for (int bit = ebit-1; bit >= 0; --bit)
+            {
+                if (head[i] << bit  > 0)
+                    return (i * ebit + bit);
+            }
+        }
+    }
+}
+
 const bool
 bitVector::operator[] (const size_t ind) const
 {
@@ -117,6 +147,16 @@ bitVector::setWithBitAnd(bitVector &lhs, bitVector &rhs)
         return -1;
     for ( int i = 0; i < rhs.num; ++i )
         head[i] = lhs.head[i] & rhs.head[i];
+    return 0;
+}
+
+int
+bitVector::setWithBitOR(bitVector &lhs, bitVector &rhs)
+{
+    if (lhs.num != rhs.num )
+        return -1;
+    for (int i = 0; i < rhs.num; ++i)
+        head[i] = lhs.head[i] | rhs.head[i];
     return 0;
 }
 

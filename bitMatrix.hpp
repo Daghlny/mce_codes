@@ -27,7 +27,8 @@ class bitVector
         void setall(int flag);
         int  setbit(int ind, int flag);
         bool all(int flag);
-        int  any(int flag);
+        int first(int flag);
+        int last(int flag);
 
         //bool &operator[] (const size_t);
         const bool operator[] (const size_t) const;
@@ -39,6 +40,7 @@ class bitVector
     private:
         elem_t *head;
         size_t num;
+        size_t valid_bit_num;
 };
 
 class bitMatrix

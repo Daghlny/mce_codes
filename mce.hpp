@@ -47,6 +47,11 @@ struct graph_t
     vid   nodenum;
 };
 
+class graphInput
+{
+    virtual void getNeighborhood(vid v) = 0;
+};
+
 
 // these functions' definitions are in neighbourhood.cpp 
 void get_vertex_dd_map(vector<vid>&, vid&, map<vid,vid>&, inputbuffer&);
