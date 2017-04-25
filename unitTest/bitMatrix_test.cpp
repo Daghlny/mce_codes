@@ -31,49 +31,27 @@ TEST(bitMatrix, checkFunctions)
 
 TEST(bitMatrix, bitOperations)
 {
+    int idx[8] = {0, 1, 2, 10, 100, 111, 198, 199};
     init();
-    bmat[0].setbit(0, 1);
-    EXPECT_EQ(0, bmat[0].first(1));
-    bmat[0].setbit(0, 0);
-    EXPECT_EQ(-1, bmat[0].first(1));
-    bmat[0].setbit(7, 1);
-    EXPECT_EQ(7, bmat[0].first(1));
-    bmat[0].setbit(7, 0);
-    EXPECT_EQ(-1, bmat[0].first(1));
+    for (int i = 0; i < 8; ++i)
+    {
+        bmat[0].setall(0);
+        EXPECT_TRUE(bmat[0].all(0));
+        bmat[0].setbit(idx[i], 1);
+        EXPECT_EQ(idx[i], bmat[0].first(1));
+        EXPECT_EQ(idx[i], bmat[0].last(1));
+        bmat[0].setbit(idx[i], 0);
+        EXPECT_EQ(-1, bmat[0].first(1));
+        EXPECT_EQ(-1, bmat[0].last(1));
 
-    EXPECT_TRUE(bmat[0].all(0));
-
-    bmat[0].setbit(101, 1);
-    EXPECT_EQ(101, bmat[0].last(1));
-    bmat[0].setbit(101, 0);
-    EXPECT_EQ(-1, bmat[0].last(1));
-    bmat[0].setbit(199, 1);
-    EXPECT_EQ(199, bmat[0].last(1));
-    bmat[0].setbit(199, 0);
-    EXPECT_EQ(-1, bmat[0].last(1));
-
-    bmat[1].setall(1);
-
-    bmat[1].setbit(0, 0);
-    EXPECT_EQ(0, bmat[1].first(0));
-    bmat[1].setbit(0, 1);
-    EXPECT_EQ(-1, bmat[1].first(0));
-    bmat[1].setbit(79, 0);
-    EXPECT_EQ(79, bmat[1].first(0));
-    bmat[1].setbit(79, 1);
-    EXPECT_EQ(-1, bmat[1].first(0));
-    bmat[1].setbit(199, 0);
-    EXPECT_EQ(199, bmat[1].first(0));
-    bmat[1].setbit(199, 1);
-    EXPECT_EQ(-1, bmat[1].first(0));
-
-    bmat[1].setbit(0, 0);
-    EXPECT_EQ(0, bmat[1].last(0));
-    bmat[1].setbit(0, 1);
-    EXPECT_EQ(-1, bmat[1].last(0));
-    bmat[1].setbit(199, 0);
-    EXPECT_EQ(199, bmat[1].last(0));
-    bmat[1].setbit(199, 1);
-    EXPECT_EQ(-1, bmat[1].last(0));
+        bmat[1].setall(1);
+        EXPECT_TRUE(bmat[1].all(1));
+        bmat[1].setbit(idx[i], 0);
+        EXPECT_EQ(idx[i], bmat[1].first(0));
+        EXPECT_EQ(idx[i], bmat[1].last(0));
+        bmat[1].setbit(idx[i], 1);
+        EXPECT_EQ(-1, bmat[1].first(0));
+        EXPECT_EQ(-1, bmat[1].last(0));
+    }
 }
 
