@@ -23,6 +23,7 @@ class bitVector
     public:
         bitVector();
         bitVector(elem_t *_h, size_t _n);
+        bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num);
         // set bitVector's bit to @flag
         void setall(int flag);
         int  setbit(int ind, int flag);

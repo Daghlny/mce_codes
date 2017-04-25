@@ -27,6 +27,12 @@ bitVector::bitVector(elem_t *_h, size_t _n):
     //nothing to do 
 }
 
+bitVector::bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num):
+    head(_h), num(_n), valid_bit_num(_valid_bit_num)
+{
+    //nothing to do
+}
+
 void
 bitVector::setall(int flag)
 {
@@ -38,12 +44,17 @@ bitVector::setall(int flag)
 int
 bitVector::setbit(int ind, int flag)
 {
-    if ( ind > ebit * num - 1 )
+    //if ( ind > ebit * num - 1 )
+    if (ind > valid_bit_num - 1 || ind < 0)
         return -1;
     int offset = ind % (ebit);
     int cnt = ind / ebit;
     if ( flag == 0 ){
-        elem_t mask = (ALLONE << (ebit-offset-1)) | (ALLONE >> (offset+1));
+        elem_t mask = 0;
+        if ( offset == 0 )
+            mask = 0x00 | (ALLONE >> (offset+1));
+        else
+            mask = (ALLONE << (ebit-offset)) | (ALLONE >> (offset+1));
         head[cnt] = head[cnt] & mask;
     } else
     {
@@ -53,6 +64,7 @@ bitVector::setbit(int ind, int flag)
     return 0;
 }
 
+// check whether the bitVector is all "1" or "0" decided by the @flag
 bool
 bitVector::all(int flag)
 {
@@ -81,8 +93,10 @@ bitVector::first(int flag)
             if ( head[i] == ALLONE ) continue;
             for (int bit = ebit - 1; bit >= 0; --bit)
             {
-                if ( (head[i] >> bit) & (ALLONE >> (ebit - bit)) == 0 )
-                    return (i * ebit + (ebit - bit));
+                if ( ((elem_t)(head[i] >> bit) & (ALLONE >> (ebit - 1))) == 0 )
+                {
+                    return (i * ebit + (ebit - bit - 1));
+                }
             }
         }
     } else
@@ -94,7 +108,7 @@ bitVector::first(int flag)
             for (int bit = ebit - 1; bit >= 0; --bit)
             {
                 if ( head[i] >> bit > 0 )
-                    return (i * ebit + (ebit - bit));
+                    return (i * ebit + (ebit - bit - 1));
             }
         }
     }
@@ -106,18 +120,19 @@ bitVector::last(int flag)
 {
     if (flag == 0)
     {
+        // search for the last of "0"
         for (int i = num-1; i >= 0; --i)
         {
             if (head[i] == ALLONE) continue;
-            for (int bit = ebit-1; bit >= 0; --bit)
+            for (int bit = 0; bit < ebit; ++bit)
             {
-                if ( (head[i] << bit) & (ALLONE >> bit) == 0)
-                    return (i * ebit + bit);
+                if ( ((head[i] >> bit) & (0x01)) == 0)
+                    return (i * ebit + (ebit - bit - 1));
             }
         }
     } else
     {
-        // search for last of "1"
+        // search for the last of "1"
         for (int i = num-1; i >= 0; --i)
         {
             if (head[i] == ALLZERO) continue;
@@ -128,12 +143,14 @@ bitVector::last(int flag)
             }
         }
     }
+    return -1;
 }
 
 const bool
 bitVector::operator[] (const size_t ind) const
 {
-    assert( ind < ebit*num );
+    //assert( ind < ebit*num );
+    assert(ind < valid_bit_num);
     int offset = ind % (ebit);
     int cnt = ind / ebit;
     elem_t mask = 0x01 << (ebit - offset - 1);
@@ -183,7 +200,7 @@ bitMatrix::bitMatrix(size_t _row, size_t _column):
 
     for (int i = 0; i < r_num; ++i)
     {
-        rows[i] = bitVector(data+i*elem_num_r, elem_num_r);
+        rows[i] = bitVector(data+i*elem_num_r, elem_num_r, c_num);
     }
 }
 
