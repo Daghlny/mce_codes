@@ -4,7 +4,9 @@ USER_DIR = ..
 GTEST_DIR = ../googletest/googletest
 CPPFLAGS += -isystem $(GTEST_DIR)/include -isystem ../
 CXXFLAGS += -g -Wall -Wextra -pthread -std=c++11
-TESTS = bitMatrix
+
+#Which tests you want to do
+TESTS = bitMatrix.out
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 				$(GTEST_DIR)/include/gtest/internal/*.h
@@ -36,6 +38,6 @@ bitMatrix.o : $(USER_DIR)/bitMatrix.cpp $(USER_DIR)/bitMatrix.hpp
 bitMatrix_test.o : $(TEST_DIR)/bitMatrix_test.cpp $(TEST_DIR)/test.hpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/bitMatrix_test.cpp
 
-bitMatrix : bitMatrix_test.o gtest_main.a bitMatrix.o
+bitMatrix.out : bitMatrix_test.o gtest_main.a bitMatrix.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
