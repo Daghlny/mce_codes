@@ -29,7 +29,7 @@ struct vtype
 struct graph_t 
 {
     public:
-        graph_t():data(NULL), nodenum(0){};
+        graph_t();
         void init_g(FILE *gfile);
         vtype &operator[] (const vid index);
         const vtype &operator[] (const vid index) const;

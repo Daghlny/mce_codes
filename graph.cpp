@@ -8,6 +8,11 @@
 #include "inputbuffer.hpp"
 #include "mce.hpp"
 
+graph_t::graph_t():
+    data(nullptr), nodenum(0)
+{
+    // nothing to do
+}
 
 /*
  * initialize the graph structure
@@ -21,7 +26,8 @@ graph_t::init_g(FILE *gfile)
     gbuffer.getline(start, end);
     nodenum = atoi(start);
 
-    data = (vtype *)malloc(sizeof(vtype) * nodenum);
+    //data = (vtype *)malloc(sizeof(vtype) * nodenum);
+    data = new vtype[nodenum];
     assert( data != NULL );
 
     vid count = nodenum;
@@ -45,7 +51,8 @@ graph_t::init_g(FILE *gfile)
         while( *(++start) != ':' && *start != '\n' )
             deg = (10 * deg) + int(*start) - 48;
 
-        vid *adjlist = (vid *)malloc(sizeof(vid) * deg);
+        //vid *adjlist = (vid *)malloc(sizeof(vid) * deg);
+        vid *adjlist = new vid[deg];
         data[v].nbv = adjlist;
         data[v].deg = deg;
 
@@ -59,6 +66,9 @@ graph_t::init_g(FILE *gfile)
     }
 }
 
+/*
+ *  get the adjacent list of vertex whose id is @index
+ */
 vtype &
 graph_t::operator[] (const vid index)
 {
@@ -71,6 +81,11 @@ graph_t::operator[] (const vid index) const
     return data[index];
 }
 
+
+/*
+ *  compute |E| of the graph
+ *  time complexity: O(|V|)
+ */
 vid
 graph_t::edge_num() const
 {
@@ -85,12 +100,20 @@ graph_t::edge_num() const
     return edgeNum / 2;
 }
 
+/*
+ *  return |V| of the graph
+ *  time complexity: O(|V|)
+ */
 vid
 graph_t::vertex_num() const
 {
     return nodenum;
 }
 
+/*
+ *  compute the maximum degree among all vertices
+ *  time complexity: O(|V|)
+ */
 vid
 graph_t::maximum_degree() const 
 {
@@ -103,6 +126,10 @@ graph_t::maximum_degree() const
     return maxdeg;
 }
 
+/*  
+ *  write the graph all edges into @gfile with adjlist format
+ *  time complexity: O(|E|)
+ */
 void
 graph_t::write_graph_adjlist(FILE *gfile) const
 {
@@ -115,7 +142,11 @@ graph_t::write_graph_adjlist(FILE *gfile) const
         fprintf(gfile, "\n");
     }
 }
-        
+
+/*  
+ *  This function is only for debugging
+ *  Write the graph's statistics into disk using Json format
+ */
 void 
 graph_t::write_graph_statistics(FILE *sfile) const
 {
@@ -124,6 +155,10 @@ graph_t::write_graph_statistics(FILE *sfile) const
     fprintf(sfile, "\"maximum degree\": %ld\n", maximum_degree());
 }
 
+/*  
+ *  write every vertex's degree into disk(not their all neighbors)
+ *  time complexity: O(|V|)
+ */
 void
 graph_t::write_degree_table(FILE *dfile) const 
 {
@@ -134,6 +169,10 @@ graph_t::write_degree_table(FILE *dfile) const
     }
 }
 
+/* 
+ *  count the number of vertices whose degree is less or equal @threshold
+ *  time: O(|V|)
+ */
 vid
 graph_t::count_smalldeg_vnum(vid threshold) const
 {
@@ -146,6 +185,11 @@ graph_t::count_smalldeg_vnum(vid threshold) const
     return vnum;
 }
 
+/*  
+ *  count the number of vertices whose degree is |V|-1, 
+ *  it means those vertices are connected to all other vertices in the graph
+ *  time: O(|V|)
+ */
 vid  
 graph_t::count_maxdeg_vnum() const
 {
@@ -163,8 +207,10 @@ graph_t::~graph_t()
 {
     for(int i = 0; i < nodenum; ++i)
         if( data[i].deg != 0 && data[i].nbv != NULL)
-            free( data[i].nbv );
+            delete[] data[i].nbv;
+            //free( data[i].nbv );
     if( nodenum != 0 && data != NULL )
-        free(data);
+        delete[] data;
+        //free(data);
 }
 

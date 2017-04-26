@@ -6,7 +6,7 @@ CPPFLAGS += -isystem $(GTEST_DIR)/include -isystem ../
 CXXFLAGS += -g -Wall -Wextra -pthread -std=c++11
 
 #Which tests you want to do
-TESTS = bitMatrix.out
+TESTS = bitMatrix.out graph.out
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 				$(GTEST_DIR)/include/gtest/internal/*.h
@@ -39,5 +39,17 @@ bitMatrix_test.o : $(TEST_DIR)/bitMatrix_test.cpp $(TEST_DIR)/test.hpp $(GTEST_H
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/bitMatrix_test.cpp
 
 bitMatrix.out : bitMatrix_test.o gtest_main.a bitMatrix.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+graph.o : $(USER_DIR)/graph.cpp $(USER_DIR)/mce.hpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/graph.cpp 
+
+inputbuffer.o : $(USER_DIR)/inputbuffer.cpp $(USER_DIR)/inputbuffer.hpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/inputbuffer.cpp
+
+graph_test.o : $(TEST_DIR)/graph_test.cpp $(TEST_DIR)/test.hpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/graph_test.cpp
+
+graph.out : graph.o gtest_main.a graph_test.o inputbuffer.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
