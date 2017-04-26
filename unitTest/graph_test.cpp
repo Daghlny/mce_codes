@@ -16,9 +16,10 @@ init()
 {
     FILE *f = fopen("./sample.graph", "r");
     g.init_g(f);
+    fclose(f);
 }
 
-TEST(graph_t, readgraph)
+TEST(graph, readgraph)
 {
     init();
     EXPECT_EQ(5, g.vertex_num());
@@ -31,3 +32,12 @@ TEST(graph_t, readgraph)
     EXPECT_EQ( 4, g.maximum_degree() );
     EXPECT_EQ( 1, g.count_maxdeg_vnum() );
 }
+
+TEST(graph, degeneracy)
+{
+    init();
+    Degeneracy d("./sample.degeneracy.order", g.nodenum);
+    vid dd = d.ddeg();
+    EXPECT_EQ(2, dd);
+}
+

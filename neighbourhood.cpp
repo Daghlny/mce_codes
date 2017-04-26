@@ -61,11 +61,13 @@ main(int argc, char **argv)
     map<vid, vid> ddmap;
     vector<vid> ddvertex;
     vid degeneracy = 0;
+    /* get the map of degeneracy id and original id */
     get_vertex_dd_map(ddvertex, degeneracy, ddmap, ddbuffer);
 
 
     LOG("reading graph\n");
     graph_t g;
+    /* init the in-memory graph structure with degeneracy map */
     init_g_withddmap(g, gfile, ddmap);
     vid edgenum = g.edge_num();
 

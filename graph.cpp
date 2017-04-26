@@ -66,6 +66,7 @@ graph_t::init_g(FILE *gfile)
     }
 }
 
+
 /*
  *  get the adjacent list of vertex whose id is @index
  */
@@ -213,4 +214,62 @@ graph_t::~graph_t()
         delete[] data;
         //free(data);
 }
+
+Degeneracy::Degeneracy(const char *filepath, vid _nodenum):
+    nodenum(_nodenum), dmap(nullptr), dd(0)
+{
+    FILE *dfile = fopen(filepath, "r+");
+    inputbuffer dbuff(dfile);
+    
+    char *linebeg = nullptr, *lineend = nullptr;
+    vid curvid = 0;
+    dmap = new vid[nodenum];
+
+    while ( dbuff.getline(linebeg, lineend) > 0 )
+    {
+        vid vertex = 0;
+        while( *(linebeg) != ':' && *linebeg != '\n' )
+        {
+            vertex = (10 * vertex) + int(*linebeg) - 48;
+            linebeg++;
+        }
+        dmap[vertex] = curvid++;
+
+        vid degree = 0;
+        while( *(++linebeg) != ':' && *linebeg != '\n' )
+            degree = (10 * degree) + int(*linebeg) - 48;
+        dd = degree > dd ? degree : dd;
+    }
+
+    fclose(dfile);
+}
+
+vid&
+Degeneracy::operator[](const size_t id)
+{
+    if ( id >= nodenum )
+    {
+        LOG("ID(%lld) is bigger than @nodenum\n", id);
+        exit(0);
+    }
+    return dmap[id];
+}
+
+const vid&
+Degeneracy::operator[](const size_t id) const
+{
+    if ( id >= nodenum )
+    {
+        LOG("ID(%lld) is bigger than @nodenum\n", id);
+        exit(0);
+    }
+    return dmap[id];
+}
+
+vid
+Degeneracy::ddeg()
+{
+    return dd;
+}
+
 

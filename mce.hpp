@@ -31,6 +31,8 @@ struct graph_t
     public:
         graph_t();
         void init_g(FILE *gfile);
+        // FIX: this function is under building
+        vid init_g_withddmap(FILE *gfile, int *ddmap);
         vtype &operator[] (const vid index);
         const vtype &operator[] (const vid index) const;
         vid edge_num() const;
@@ -45,6 +47,20 @@ struct graph_t
 
     vtype *data;
     vid   nodenum;
+};
+
+struct Degeneracy
+{
+    public:
+        Degeneracy(const char *filepath, vid _nodenum);
+        vid& operator[] (const size_t);
+        const vid& operator[] (const size_t) const;
+        vid ddeg();
+    private:
+        // @nodenum is only used for bound the @dmap
+        vid nodenum;
+        vid *dmap;
+        vid dd;
 };
 
 class graphInput
