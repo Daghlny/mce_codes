@@ -19,8 +19,13 @@ using std::map;
 typedef int64_t vid;
 typedef vector<vid>::iterator vIt;
 
+class graph_t;
+class Degeneracy;
+
 struct vtype
 {
+    vtype(): key(0), nbv(nullptr), deg(0){}
+    vtype(vid *_nbv, vid _deg): key(0), nbv(_nbv), deg(_deg) {}
     vid key;
     vid *nbv;
     vid deg;
@@ -32,7 +37,7 @@ struct graph_t
         graph_t();
         void init_g(FILE *gfile);
         // FIX: this function is under building
-        vid init_g_withddmap(FILE *gfile, int *ddmap);
+        int init_g_withddmap(const char *filename, Degeneracy &d);
         vtype &operator[] (const vid index);
         const vtype &operator[] (const vid index) const;
         vid edge_num() const;
@@ -45,8 +50,8 @@ struct graph_t
         vid count_maxdeg_vnum() const;
         ~graph_t();
 
-    vtype *data;
-    vid   nodenum;
+        vtype *data;
+        vid   nodenum;
 };
 
 struct Degeneracy
@@ -56,6 +61,8 @@ struct Degeneracy
         vid& operator[] (const size_t);
         const vid& operator[] (const size_t) const;
         vid ddeg();
+        vid get_nodenum();
+        ~Degeneracy();
     private:
         // @nodenum is only used for bound the @dmap
         vid nodenum;

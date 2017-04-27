@@ -5,8 +5,12 @@
 #include <map>
 #include <cstring>
 #include <cstdint>
+#include <iostream>
 #include "inputbuffer.hpp"
 #include "mce.hpp"
+
+using std::cout;
+using std::endl;
 
 graph_t::graph_t():
     data(nullptr), nodenum(0)
@@ -21,6 +25,14 @@ graph_t::graph_t():
 void
 graph_t::init_g(FILE *gfile)
 {
+    if ( data != nullptr )
+    {
+        for(int i = 0; i < nodenum; ++i)
+            if( data[i].deg != 0 && data[i].nbv != nullptr)
+                delete[] data[i].nbv;
+        if( nodenum != 0 && data != NULL )
+            delete[] data;
+    }
     inputbuffer gbuffer(gfile);
     char *start = NULL, *end = NULL;
     gbuffer.getline(start, end);
@@ -28,7 +40,7 @@ graph_t::init_g(FILE *gfile)
 
     //data = (vtype *)malloc(sizeof(vtype) * nodenum);
     data = new vtype[nodenum];
-    assert( data != NULL );
+    assert( data != nullptr );
 
     vid count = nodenum;
     while( --count >= 0 )
@@ -64,6 +76,61 @@ graph_t::init_g(FILE *gfile)
             data[v].nbv[i] = u;
         }
     }
+}
+
+int
+graph_t::init_g_withddmap(const char *filename, Degeneracy &d)
+{
+    FILE *gfile = fopen(filename, "r");
+    inputbuffer gbuff(gfile);
+    
+    char *start = nullptr, *end = nullptr;
+    gbuff.getline(start, end);
+    if ( start == nullptr || end == nullptr ){
+        LOG("@start or @end is nullptr\n");
+        exit(0);
+    }
+    nodenum = atoi(start);
+
+    data = new vtype[nodenum];
+
+    if ( data == nullptr ){
+        LOG("@g.data == nullptr\n");
+        exit(0);
+    }
+    vid count = nodenum;
+    while ( --count >= 0 )
+    {
+        start = end = nullptr;
+        if ( gbuff.getline(start, end) < 0 ) break;
+
+        vid v = 0;
+        while ( *start == '\n' ) ++start;
+        while ( *start != ','  ){
+            v = (10 * v) + int(*start) - 48;
+            ++start;
+        }
+
+        assert( v < nodenum );
+        vid newid = d[v];
+
+        vid deg = 0;
+        while ( *(++start) != ':' && *start != '\n' )
+            deg = ( 10 * deg ) + int(*start) - 48;
+
+        data[newid].nbv = new vid[deg];
+        data[newid].deg = deg;
+
+        for ( int i = 0; i < deg; ++i )
+        {
+            vid u = 0;
+            while ( *(++start) != ':' && *(start) != '\n' )
+                u = ( 10 * u ) + int(*start) - 48;
+            u = d[u];
+            data[newid].nbv[i] = u;
+        }
+    }
+    fclose(gfile);
 }
 
 
@@ -155,6 +222,7 @@ graph_t::write_graph_statistics(FILE *sfile) const
     fprintf(sfile, "\"edge count\": %ld\n", edge_num());
     fprintf(sfile, "\"maximum degree\": %ld\n", maximum_degree());
 }
+
 
 /*  
  *  write every vertex's degree into disk(not their all neighbors)
@@ -249,7 +317,7 @@ Degeneracy::operator[](const size_t id)
 {
     if ( id >= nodenum )
     {
-        LOG("ID(%lld) is bigger than @nodenum\n", id);
+        LOG("ID(%lld) is bigger than @nodenum(%lld)\n", id, nodenum);
         exit(0);
     }
     return dmap[id];
@@ -272,4 +340,14 @@ Degeneracy::ddeg()
     return dd;
 }
 
+vid
+Degeneracy::get_nodenum()
+{
+    return nodenum;
+}
+
+Degeneracy::~Degeneracy()
+{
+    delete[] dmap;
+}
 

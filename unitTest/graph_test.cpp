@@ -10,6 +10,7 @@ using std::cout;
 using std::endl;
 
 graph_t g;
+graph_t newg;
 
 void
 init()
@@ -36,8 +37,16 @@ TEST(graph, readgraph)
 TEST(graph, degeneracy)
 {
     init();
+
     Degeneracy d("./sample.degeneracy.order", g.nodenum);
     vid dd = d.ddeg();
     EXPECT_EQ(2, dd);
+    EXPECT_EQ(d[4], 0);
+    EXPECT_EQ(d[3], 4);
+
+    newg.init_g_withddmap("./sample.graph", d);
+    EXPECT_EQ(newg.data[2].deg, 4);
+    EXPECT_EQ(newg.data[0].deg, 1);
+    EXPECT_EQ(newg.data[4].deg, 2);
 }
 
