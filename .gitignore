@@ -4,7 +4,6 @@
 *.swp
 tags
 *.data
-test*
 *.o
 *.a
 

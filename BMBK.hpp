@@ -20,17 +20,21 @@ class BMBK
 {
     public:
         BMBK();
-        BMBK(const char *gfilename, const char *dfilename, vid nodenum, vid maxdeg);
+        BMBK(const char *gfilename, const char *dfilename, vid nodenum);
 
         int compute();
 
     private:
         int32_t top;
-        bitMatrix Pmat;
-        bitMatrix Rmat;
-        bitMatrix Xmat;
         Degeneracy d;
         graph_t g;
+};
+
+class CliqueSet
+{
+    public:
+        void append(localbitVector &R);
+
 };
 
 #endif

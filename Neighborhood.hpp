@@ -16,6 +16,7 @@ class Neighborhood: public bitMatrix
         vid original_id(int idx);
         int mapped_id(vid v);
 
+        size_t remain_vtx_num;
     private:
         void twoAdjlistAND(vid *lower, vid *nb, int index);
         void assign_rows(graph_t &g);

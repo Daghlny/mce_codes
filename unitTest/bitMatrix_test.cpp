@@ -53,5 +53,11 @@ TEST(bitMatrix, bitOperations)
         EXPECT_EQ(-1, bmat[1].first(0));
         EXPECT_EQ(-1, bmat[1].last(0));
     }
+
+    bmat[0].setall(0);
+    EXPECT_EQ(-1, bmat[0].setbit(200, 1));
+    EXPECT_EQ(199, bmat[0].last(0));
+    bmat[0].setall(1);
+    EXPECT_EQ(199, bmat[0].last(1));
 }
 

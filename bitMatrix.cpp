@@ -41,12 +41,20 @@ bitVector::setall(int flag)
         head[i] = eflag;
 }
 
+/** \brief set the given index corresponding bit as given value. /
+ *         If the ind is beyond the range of valid index, then it will return -1.
+ *  \param ind the index of required bit
+ *  \param flag the bit value
+ */
 int
 bitVector::setbit(int ind, int flag)
 {
     //if ( ind > ebit * num - 1 )
     if (ind > valid_bit_num - 1 || ind < 0)
+    {
+        LOG("invalid @ind value (%d)\n", ind);
         return -1;
+    }
     int offset = ind % (ebit);
     int cnt = ind / ebit;
     if ( flag == 0 ){
@@ -64,7 +72,9 @@ bitVector::setbit(int ind, int flag)
     return 0;
 }
 
-// check whether the bitVector is all "1" or "0" decided by the @flag
+/** \brief  check whether the bitVector is all "1" or "0" decided by the @flag
+ *  \param flag the given flag, any value not equals to "0" is treated as "1".
+ */
 bool
 bitVector::all(int flag)
 {
@@ -91,11 +101,15 @@ bitVector::first(int flag)
         for (int i = 0; i < num; ++i)
         {
             if ( head[i] == ALLONE ) continue;
-            for (int bit = ebit - 1; bit >= 0; --bit)
+            for ( int bit = 0; bit < ebit; ++bit )
             {
-                if ( ((elem_t)(head[i] >> bit) & (ALLONE >> (ebit - 1))) == 0 )
+                if ( ((elem_t)(head[i] >> (ebit-bit-1)) & (0x01)) == 0 )
                 {
-                    return (i * ebit + (ebit - bit - 1));
+                    int res = i * ebit + bit;
+                    if ( res < valid_bit_num )
+                        return res;
+                    else
+                        return -1;
                 }
             }
         }
@@ -105,10 +119,16 @@ bitVector::first(int flag)
         for ( int i = 0; i < num; ++i )
         {
             if (head[i] == ALLZERO) continue;
-            for (int bit = ebit - 1; bit >= 0; --bit)
+            for (int bit = 0; bit < ebit; ++bit)
             {
-                if ( head[i] >> bit > 0 )
-                    return (i * ebit + (ebit - bit - 1));
+                if ( ((elem_t)(head[i] >> (ebit-bit-1)) & (0x01)) != 0 )
+                {
+                    int res = i * ebit + bit;
+                    if ( res < valid_bit_num )
+                        return res;
+                    else 
+                        return -1;
+                }
             }
         }
     }
@@ -124,10 +144,16 @@ bitVector::last(int flag)
         for (int i = num-1; i >= 0; --i)
         {
             if (head[i] == ALLONE) continue;
-            for (int bit = 0; bit < ebit; ++bit)
+            for (int bit = ebit-1; bit >= 0; --bit)
             {
-                if ( ((head[i] >> bit) & (0x01)) == 0)
-                    return (i * ebit + (ebit - bit - 1));
+                if ( ((elem_t)(head[i] >> (ebit-bit-1)) & (0x01)) == 0)
+                {
+                    int res = i * ebit + bit;
+                    if ( res < valid_bit_num )
+                        return res;
+                    else
+                        continue;
+                }
             }
         }
     } else
@@ -138,8 +164,14 @@ bitVector::last(int flag)
             if (head[i] == ALLZERO) continue;
             for (int bit = ebit-1; bit >= 0; --bit)
             {
-                if (head[i] << bit  > 0)
-                    return (i * ebit + bit);
+                if ( ((elem_t)(head[i] >> (ebit-bit-1)) & (0x01)) != 0)
+                {
+                    int res = i * ebit + bit;
+                    if ( res < valid_bit_num )
+                        return res;
+                    else
+                        continue;
+                }
             }
         }
     }
@@ -157,6 +189,11 @@ bitVector::operator[] (const size_t ind) const
     return (bool)(head[cnt] & mask);
 }
 
+/** \brief set the value of bitVector as two bitVector's AND operation result. /
+ *         You can think it as a intersect operation
+ *  \param lhs the first bitVector operand
+ *  \param rhs the second bitVector operand
+ */
 int
 bitVector::setWithBitAnd(bitVector &lhs, bitVector &rhs)
 {
@@ -167,6 +204,10 @@ bitVector::setWithBitAnd(bitVector &lhs, bitVector &rhs)
     return 0;
 }
 
+/** \brief set the value of bitVector as two bitVector's OR operation result
+ *  \param lhs the first bitVector operand
+ *  \param rhs the second bitVector operand
+ */
 int
 bitVector::setWithBitOR(bitVector &lhs, bitVector &rhs)
 {
@@ -191,6 +232,10 @@ bitVector::to_string()
 
 /* localbitVector */
 
+/** \brief the constructor of localbitVector, and assign default value\
+ *         as 0
+ *  \param _valid_bit_num the desirable bit number of this bitVector
+ */
 localbitVector::localbitVector(size_t _valid_bit_num):
     bitVector(nullptr, 0, _valid_bit_num), data(nullptr)
 {
@@ -199,6 +244,7 @@ localbitVector::localbitVector(size_t _valid_bit_num):
     else 
         num = valid_bit_num / ebit;
     data = new elem_t[num];
+    memset(data, 0, sizeof(elem_t) * num);
     if (data == nullptr){
         LOG("@localbitVector's initialization(@num: %ld) has error\n", num);
         exit(0);
@@ -228,6 +274,11 @@ bitMatrix::bitMatrix(size_t _row, size_t _column):
     init(_row, _column);
 }
 
+/** \brief initialize the bitMatrix with given row and column number /
+ *         and the values inside the bitMatrix is default assigned 0
+ *  \param _row the given row number
+ *  \param _column the given column number
+ */
 void
 bitMatrix::init(size_t _row, size_t _column)
 {
@@ -259,6 +310,7 @@ bitMatrix::operator[] (const size_t ind)
 {
     if ( ind >= rows.size() )
     {
+        LOG("@ind(%d) is bigger than rows.size()(%d)\n", ind, rows.size());
         exit(0);
     }
     return rows[ind];
@@ -269,6 +321,7 @@ bitMatrix::operator[] (const size_t ind) const
 {
     if ( ind >= rows.size() )
     {
+        LOG("@ind(%d) is bigger than rows.size()(%d)\n", ind, rows.size());
         exit(0);
     }
     return rows[ind];

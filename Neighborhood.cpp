@@ -31,7 +31,7 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
         // nothing to do
     }
 
-    size_t remain_vtx_num = static_cast<size_t>( nend - lower );
+    remain_vtx_num = static_cast<size_t>( nend - lower );
     init(remain_vtx_num, remain_vtx_num);
     
     //init(g.data[v].deg, g.data[v].deg);

@@ -7,10 +7,13 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 #include "bitMatrix.hpp"
 #include "inputbuffer.hpp"
+#include "Neighborhood.hpp"
 #include "mce.hpp"
+#include "BMBK.hpp"
 
 using std::map;
 using std::vector;
@@ -29,9 +32,8 @@ BMBK::BMBK():
     \param nodenum    total number of graph, used to initialize bitMatrix
     \param maxdeg     maximum degree of graph, used to initialize bitMatrix
 */
-BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum, vid maxdeg):
+BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
     top(0),
-    Pmat(maxdeg+1, nodenum), Rmat(maxdeg+1, nodenum), Xmat(maxdeg+1, nodenum),
     d(dfilename, nodenum),
     g()
 {
@@ -42,7 +44,70 @@ int
 BMBK::compute()
 {
     localbitVector R(g.nodenum);
-    
+    int count = 0;
+    for ( int i = 0; i < g.nodenum; ++i )
+    {
+        cout << "#### New Vertex: " << i << endl;
+        R.setall(0);
+        Neighborhood nbhood(g, i);
+        top = 0;
+        vid degree = g.data[i].deg;
+        //FIX: a direct variable access should be optimized
+        cout << "Remain Vertex: " << nbhood.remain_vtx_num << endl;
+        bitMatrix Pmat(degree+2, nbhood.remain_vtx_num);
+        cout << "#### Degree: " << degree << endl;
+        Pmat[top].setall(1);
+        //Pmat[top].setWithBitOR(Pmat[top], nbhood[])
+        bitMatrix Xmat(degree+2, degree);
+        while ( top >= 0 )
+        {
+            /*
+            if ( count++ > 5 )
+                exit(0);
+                */
+            int v = -1;
+            //LOG("top: %d\n", top);
+            if ( ( v = Pmat[top].first(1)) != -1 )
+            {
+                cout << "--------------------------------------------\nif" << endl;
+                cout << "top: " << top << " v: " << v << endl;
+                cout << "Pmat: " << Pmat[top].to_string() << endl;
+                cout << "Xmat: " << Xmat[top].to_string() << endl;
+                cout << "R   : " << R.to_string() << endl;
+                Pmat[top].setbit(v, 0);
+                //FIX: this sentence maybe has wrong
+                Pmat[top+1].setWithBitAnd(nbhood[v], Pmat[top]);
+                Xmat[top].setbit(v, 1);
+                Xmat[top+1].setWithBitAnd(nbhood[v], Xmat[top]);
+                R.setbit(v, 1);
+                top++;
+            } else
+            {
+                cout << "--------------------------------------------\nelse" << endl;
+                cout << "top: " << top << " v: " << v << endl;
+                cout << "Pmat: " << Pmat[top].to_string() << endl;
+                cout << "Xmat: " << Xmat[top].to_string() << endl;
+                cout << "R   : " << R.to_string() << endl;
+                if ( Xmat[top].all(0) )
+                {
+                    cout << "hello" << endl;
+                    //cout << "R: " << R.to_string() << endl;
+                    //M.append(R);
+                }
+                top--;
+                cout << "last 1: " << R.last(1) << endl;
+                int last_one_pos = R.last(1);
+                if ( last_one_pos != -1 )
+                    R.setbit(last_one_pos, 0);
+            }
+        }
+    }
+}
+
+void
+CliqueSet::append(localbitVector &R)
+{
+    //do nothing
 }
 
 
