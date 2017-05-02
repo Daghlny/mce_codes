@@ -189,9 +189,52 @@ bitVector::to_string()
     return res;
 }
 
+/* localbitVector */
+
+localbitVector::localbitVector(size_t _valid_bit_num):
+    bitVector(nullptr, 0, _valid_bit_num), data(nullptr)
+{
+    if ( valid_bit_num % ebit )
+        num = valid_bit_num / ebit + 1;
+    else 
+        num = valid_bit_num / ebit;
+    data = new elem_t[num];
+    if (data == nullptr){
+        LOG("@localbitVector's initialization(@num: %ld) has error\n", num);
+        exit(0);
+    }
+
+    head = data;
+}
+
+localbitVector::~localbitVector()
+{
+    if ( data != nullptr )
+        delete[] data;
+}
+
+
+/* bitMatrix */
+
+bitMatrix::bitMatrix():
+    r_num(0), c_num(0), data(nullptr), rows(0)
+{
+    //do nothing
+}
+
 bitMatrix::bitMatrix(size_t _row, size_t _column):
     r_num(_row), c_num(_column), data(nullptr), rows(_row)
 {
+    init(_row, _column);
+}
+
+void
+bitMatrix::init(size_t _row, size_t _column)
+{
+    r_num = _row;
+    c_num = _column;
+    rows.resize(_row);
+
     size_t byte_num_r = ceil((double)(c_num)/8);
     elem_num_r = ceil((double)(byte_num_r)/sizeof(elem_t));
     elem_num = (elem_num_r * r_num);

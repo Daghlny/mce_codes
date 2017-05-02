@@ -35,6 +35,9 @@ struct graph_t
 {
     public:
         graph_t();
+        graph_t(FILE *gfile);
+        graph_t(const char *filename, Degeneracy &d);
+
         void init_g(FILE *gfile);
         // FIX: this function is under building
         int init_g_withddmap(const char *filename, Degeneracy &d);
@@ -57,16 +60,24 @@ struct graph_t
 struct Degeneracy
 {
     public:
+        Degeneracy();
+        Degeneracy(vid _nodenum);
+        // used this one
         Degeneracy(const char *filepath, vid _nodenum);
+
+        void init(const char *filepath, vid _nodenum);
         vid& operator[] (const size_t);
         const vid& operator[] (const size_t) const;
-        vid ddeg();
-        vid get_nodenum();
+        vid   ddeg();
+        vid   get_nodenum();
+        void  reverse_dict();
+        inline vid   re(vid id);
         ~Degeneracy();
     private:
         // @nodenum is only used for bound the @dmap
         vid nodenum;
         vid *dmap;
+        vid *remap;
         vid dd;
 };
 

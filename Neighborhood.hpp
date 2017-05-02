@@ -1,9 +1,10 @@
 
 #ifndef NEIGHBORHOOD__HPP
 #define NEIGHBORHOOD__HPP
-#include "mce.hpp"
 #include <vector>
 #include <map>
+#include "mce.hpp"
+#include "bitMatrix.hpp"
 
 using std::vector;
 using std::map;
@@ -11,20 +12,18 @@ using std::map;
 class Neighborhood: public bitMatrix
 {
     public:
-        Neighborhood(){}
-        init(graph_t &g, vid v);
-        friend class NeighborhoodMaker;
-    private:
-        vid v;
-        map<vid, int> dict;
-};
+        Neighborhood(graph_t &g, vid v);
 
-class NeighborhoodMaker
-{
-    public:
-        int getNeighborhood(Neighborhood &nb, vid v);
     private:
-        graph_t &g;
+        void twoAdjlistAND(vid *lower, vid *nb, int index);
+        void assign_rows(graph_t &g);
+        int  binary_search(vid v);
+
+        vid v;
+        vid *nbeg;
+        vid *nend;
+        vid *lower;
+        map<vid, int> dict;
 };
 
 

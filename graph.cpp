@@ -18,6 +18,18 @@ graph_t::graph_t():
     // nothing to do
 }
 
+graph_t::graph_t(FILE *gfile):
+    data(nullptr), nodenum(0)
+{
+    init_g(gfile);
+}
+
+graph_t::graph_t(const char *filename, Degeneracy &d):
+    data(nullptr), nodenum(0)
+{
+    init_g_withddmap(filename, d);
+}
+
 /*
  * initialize the graph structure
  * the vertices order can be not sorted
@@ -283,9 +295,32 @@ graph_t::~graph_t()
         //free(data);
 }
 
-Degeneracy::Degeneracy(const char *filepath, vid _nodenum):
-    nodenum(_nodenum), dmap(nullptr), dd(0)
+Degeneracy::Degeneracy():
+    nodenum(0), dmap(nullptr), remap(nullptr), dd(0)
 {
+    // do nothing
+}
+
+Degeneracy::Degeneracy(vid _nodenum):
+    nodenum(_nodenum), dmap(nullptr), remap(nullptr), dd(0)
+{
+    //do nothing
+}
+
+Degeneracy::Degeneracy(const char *filepath, vid _nodenum):
+    nodenum(_nodenum), dmap(nullptr), remap(nullptr), dd(0)
+{
+    init(filepath, _nodenum);
+}
+
+/*!  \brief only read the degeneracy order from file to @dmap
+ *   \param filepath degeneracy file path
+ *   \param _nodenum total graph vertex count, in other words, the line number of degeneracy file
+ */
+void
+Degeneracy::init(const char *filepath, vid _nodenum)
+{
+    nodenum = _nodenum;
     FILE *dfile = fopen(filepath, "r+");
     inputbuffer dbuff(dfile);
     
@@ -346,8 +381,47 @@ Degeneracy::get_nodenum()
     return nodenum;
 }
 
+/*  
+ *  get the reverse map relationship between degeneracy id and original id
+ *  you should guarantee the @remap is created before
+ *  time: O(|V|)
+ */
+void
+Degeneracy::reverse_dict()
+{
+    if ( dmap == nullptr )
+    {
+        LOG("You should initialize the @dmap first\n");
+        exit(0);
+    }
+    if ( remap != nullptr )
+        delete[] remap;
+    remap = new vid[nodenum];
+    if ( remap == nullptr )
+    {
+        LOG("@remap is nullptr\n");
+        exit(0);
+    }
+
+    for (vid i = 0; i < nodenum; ++i)
+        remap[dmap[i]] = i;
+}
+
+/*  
+ *  the reverse version of operator[] 
+ *  time: O(1)
+ */
+inline vid
+Degeneracy::re(vid id)
+{
+    return remap[id];
+}
+
 Degeneracy::~Degeneracy()
 {
-    delete[] dmap;
+    if (dmap != nullptr)
+        delete[] dmap;
+    if (remap != nullptr)
+        delete[] remap;
 }
 

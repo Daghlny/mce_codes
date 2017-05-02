@@ -5,12 +5,14 @@
 #include "test.hpp"
 #include "mce.hpp"
 #include "inputbuffer.hpp"
+#include "Neighborhood.hpp"
 
 using std::cout;
 using std::endl;
 
 graph_t g;
 graph_t newg;
+int ebit;
 
 void
 init()
@@ -48,5 +50,12 @@ TEST(graph, degeneracy)
     EXPECT_EQ(newg.data[2].deg, 4);
     EXPECT_EQ(newg.data[0].deg, 1);
     EXPECT_EQ(newg.data[4].deg, 2);
+}
+
+TEST(graph, Neighborhood)
+{
+    init();
+    ebit = 64;
+    Neighborhood n(g, 0);
 }
 

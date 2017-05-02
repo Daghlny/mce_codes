@@ -7,6 +7,9 @@
 #include <vector>
 #include <string>
 
+#include "mce.hpp"
+#include "inputbuffer.hpp"
+
 using std::vector;
 using std::string;
 
@@ -38,22 +41,35 @@ class bitVector
         int setWithBitAnd(bitVector& lhs, bitVector& rhs);
         int setWithBitOR(bitVector& lhs, bitVector &rhs);
         string to_string();
-    private:
+
+    protected:
         elem_t *head;
         size_t num;
         size_t valid_bit_num;
 };
 
+class localbitVector: public bitVector
+{
+    public:
+        localbitVector(size_t _valid_bit_num);
+        ~localbitVector();
+
+    private:
+        elem_t *data;
+};
+
 class bitMatrix
 {
     public:
+        bitMatrix();
         bitMatrix(size_t rownum, size_t columnnum);
+        void init(size_t rownum, size_t columnnum);
         ~bitMatrix();
 
         bitVector &operator[] (const size_t);
         const bitVector &operator[] (const size_t) const;
 
-    private:
+    protected:
         size_t r_num;
         size_t c_num;
         size_t elem_num;

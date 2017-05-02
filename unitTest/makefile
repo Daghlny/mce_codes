@@ -3,7 +3,8 @@ TEST_DIR = .
 USER_DIR = ..
 GTEST_DIR = ../googletest/googletest
 CPPFLAGS += -isystem $(GTEST_DIR)/include -isystem ../
-CXXFLAGS += -g -Wall -Wextra -pthread -std=c++11
+#CXXFLAGS += -g -Wall -Wextra -pthread -std=c++11
+CXXFLAGS += -g -Wextra -pthread -std=c++11
 
 #Which tests you want to do
 TESTS = bitMatrix.out graph.out
@@ -47,9 +48,12 @@ graph.o : $(USER_DIR)/graph.cpp $(USER_DIR)/mce.hpp
 inputbuffer.o : $(USER_DIR)/inputbuffer.cpp $(USER_DIR)/inputbuffer.hpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/inputbuffer.cpp
 
+Neighborhood.o : $(USER_DIR)/Neighborhood.cpp $(USER_DIR)/Neighborhood.hpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/Neighborhood.cpp
+
 graph_test.o : $(TEST_DIR)/graph_test.cpp $(TEST_DIR)/test.hpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/graph_test.cpp
 
-graph.out : graph.o gtest_main.a graph_test.o inputbuffer.o
+graph.out : graph.o gtest_main.a graph_test.o inputbuffer.o Neighborhood.o bitMatrix.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
