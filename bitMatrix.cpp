@@ -240,6 +240,8 @@ bitMatrix::init(size_t _row, size_t _column)
     elem_num = (elem_num_r * r_num);
     data = new elem_t[elem_num];
     assert(data != nullptr);
+    /* initialize the @data with 0 */
+    memset(data, 0x00, sizeof(elem_t) * elem_num);
 
     for (int i = 0; i < r_num; ++i)
     {
@@ -270,5 +272,12 @@ bitMatrix::operator[] (const size_t ind) const
         exit(0);
     }
     return rows[ind];
+}
+
+void
+bitMatrix::print()
+{
+    for ( int i = 0; i < r_num; ++i)
+        cout << rows[i].to_string() << endl;
 }
 

@@ -69,6 +69,8 @@ class bitMatrix
         bitVector &operator[] (const size_t);
         const bitVector &operator[] (const size_t) const;
 
+        virtual void print();
+
     protected:
         size_t r_num;
         size_t c_num;

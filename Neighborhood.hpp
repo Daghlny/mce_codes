@@ -13,6 +13,8 @@ class Neighborhood: public bitMatrix
 {
     public:
         Neighborhood(graph_t &g, vid v);
+        vid original_id(int idx);
+        int mapped_id(vid v);
 
     private:
         void twoAdjlistAND(vid *lower, vid *nb, int index);

@@ -31,12 +31,17 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
         // nothing to do
     }
 
-    vid remain_vtx_num = static_cast<vid>( nend - lower );
+    size_t remain_vtx_num = static_cast<size_t>( nend - lower );
+    init(remain_vtx_num, remain_vtx_num);
     
-    init(g.data[v].deg, g.data[v].deg);
+    //init(g.data[v].deg, g.data[v].deg);
     assign_rows(g);
 }
 
+/** \brief assign every row of Neighborhood the intersection between /
+ *         the neighbor and vertex @v
+ *  \param g graph
+ */
 void
 Neighborhood::assign_rows( graph_t &g )
 {
@@ -50,7 +55,7 @@ Neighborhood::assign_rows( graph_t &g )
             vid  curdeg = g.data[curnbor].deg;
 
             vid mapped_id = static_cast<vid>(nbit - lower);
-            //FIX: this procedure can be done by checking situation
+            //FIX: this procedure could be optimized by checking situation
             for( int i = 0; i < curdeg; ++i )
             {
                 int pos = binary_search(curnbv[i]);
@@ -61,6 +66,25 @@ Neighborhood::assign_rows( graph_t &g )
             }
         }
     }
+}
+
+/** \brief use the index in Neighborhood to get the vertex original ID
+ *  \param idx the mapped id in @data of Neighborhood
+ */
+vid
+Neighborhood::original_id(int idx)
+{
+    return lower[idx];
+}
+
+int
+Neighborhood::mapped_id(vid v)
+{
+    vid *fpos = std::find(lower, nend, v);
+    if ( fpos == nend )
+        return -1;
+    else
+        return static_cast<int>(fpos - lower);
 }
 
 int

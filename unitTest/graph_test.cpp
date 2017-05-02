@@ -57,5 +57,34 @@ TEST(graph, Neighborhood)
     init();
     ebit = 64;
     Neighborhood n(g, 0);
+    EXPECT_EQ(n.original_id(0), 1);
+    EXPECT_EQ(n.mapped_id(3), 2);
+    //n.print();
+}
+
+TEST(graph, localbitVector)
+{
+    localbitVector lbitv(200);
+    int idx[8] = {0, 1, 2, 10, 100, 111, 198, 199};
+    for (int i = 0; i < 8; ++i)
+    {
+        lbitv.setall(0);
+        EXPECT_TRUE(lbitv.all(0));
+        lbitv.setbit(idx[i], 1);
+        EXPECT_EQ(idx[i], lbitv.first(1));
+        EXPECT_EQ(idx[i], lbitv.last(1));
+        lbitv.setbit(idx[i], 0);
+        EXPECT_EQ(-1, lbitv.first(1));
+        EXPECT_EQ(-1, lbitv.last(1));
+
+        lbitv.setall(1);
+        EXPECT_TRUE(lbitv.all(1));
+        lbitv.setbit(idx[i], 0);
+        EXPECT_EQ(idx[i], lbitv.first(0));
+        EXPECT_EQ(idx[i], lbitv.last(0));
+        lbitv.setbit(idx[i], 1);
+        EXPECT_EQ(-1, lbitv.first(0));
+        EXPECT_EQ(-1, lbitv.last(0));
+    }
 }
 
