@@ -6,5 +6,6 @@ tags
 *.data
 *.o
 *.a
+*.old
 
 ./bin/*

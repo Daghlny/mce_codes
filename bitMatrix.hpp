@@ -30,6 +30,7 @@ class bitVector
         // set bitVector's bit to @flag
         void setall(int flag);
         int  setbit(int ind, int flag);
+        int  setfront(int lend, int flag);
         bool all(int flag);
         int first(int flag);
         int last(int flag);

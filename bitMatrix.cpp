@@ -57,17 +57,56 @@ bitVector::setbit(int ind, int flag)
     }
     int offset = ind % (ebit);
     int cnt = ind / ebit;
-    if ( flag == 0 ){
+    if ( flag == 0 )
+    {
         elem_t mask = 0;
         if ( offset == 0 )
-            mask = 0x00 | (ALLONE >> (offset+1));
+            mask = (ALLONE >> 1);
+        else if ( offset == ebit-1 )
+            mask = (ALLONE << 1);
         else
-            mask = (ALLONE << (ebit-offset)) | (ALLONE >> (offset+1));
+            mask = (ALLONE << (ebit - offset)) | (ALLONE >> (offset + 1));
         head[cnt] = head[cnt] & mask;
     } else
     {
         elem_t mask = (elem_t)0x01 << ( ebit - offset - 1 );
         head[cnt] = head[cnt] | mask;
+    }
+    return 0;
+}
+
+/** \brief set the front partition marked by lend to the given flag
+ *  \param lend the last out-of-range index, it means [0, lend)
+ *  \param flag given flag, "0" or "1"
+ */
+int
+bitVector::setfront(int lend, int flag)
+{
+    if ( lend < 0 || lend > valid_bit_num ){
+        LOG("lend(%d) is out of valid range[0, %d)\n", lend, valid_bit_num);
+        return -1;
+    }
+    int frontnum = lend / ebit;
+    int offset = lend % ebit;
+
+    for ( int cnt = 0; cnt < frontnum; ++cnt )
+    {
+        if ( flag == 0 ){
+            head[cnt] = 0x00;
+        } else {
+            head[cnt] = ALLONE;
+        }
+    }
+    if ( offset != 0 )
+    {
+        if ( flag == 0 )
+        {
+            elem_t mask = ALLONE >> offset;
+            head[frontnum] = head[frontnum] & mask;
+        } else {
+            elem_t mask = ALLONE << (ebit - offset);
+            head[frontnum] = head[frontnum] | mask;
+        }
     }
     return 0;
 }

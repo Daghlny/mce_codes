@@ -55,9 +55,28 @@ TEST(bitMatrix, bitOperations)
     }
 
     bmat[0].setall(0);
-    EXPECT_EQ(-1, bmat[0].setbit(200, 1));
+    //EXPECT_EQ(-1, bmat[0].setbit(200, 1));
     EXPECT_EQ(199, bmat[0].last(0));
     bmat[0].setall(1);
     EXPECT_EQ(199, bmat[0].last(1));
+
+    cout << "Begin setfront() function TEST" << endl;
+    bmat[0].setall(0);
+    for (int i = 1; i < 8; ++i)
+    {
+        bmat[0].setall(0);
+        bmat[0].setfront(idx[i], 1);
+        EXPECT_EQ(idx[i]-1, bmat[0].last(1));
+        bmat[0].setall(1);
+        bmat[0].setfront(idx[i], 0);
+        EXPECT_EQ(idx[i]-1, bmat[0].last(0));
+    }
+
+    bmat[0].setall(0);
+    bmat[0].setfront(0, 1);
+    EXPECT_EQ(-1, bmat[0].last(1));
+    bmat[0].setall(0);
+    bmat[0].setfront(200, 1);
+    EXPECT_TRUE(bmat[0].all(1));
 }
 
