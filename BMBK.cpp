@@ -54,19 +54,21 @@ BMBK::compute()
         vid degree = g.data[i].deg;
         //FIX: a direct variable access should be optimized
         cout << "Remain Vertex: " << nbhood.remain_vtx_num << endl;
-        bitMatrix Pmat(degree+2, nbhood.remain_vtx_num);
-        cout << "#### Degree: " << degree << endl;
+        bitMatrix Pmat(degree+2, nbhood.get_nodenum());
+        cout << "#### Degree: " << nbhood.get_nodenum() << endl;
+        //FIX: this phase can be optimized
         Pmat[top].setall(1);
-        //Pmat[top].setWithBitOR(Pmat[top], nbhood[])
         bitMatrix Xmat(degree+2, degree);
+        int pre_processed = static_cast<int>(nbhood.get_nodenum() - nbhood.remain_vtx_num);
+        for ( int i = 0; i < pre_processed; ++i )
+        {
+            cout << "i: " << i << endl;
+            Xmat[top].setbit(i, 1);
+            Pmat[top].setbit(i, 0);
+        }
         while ( top >= 0 )
         {
-            /*
-            if ( count++ > 5 )
-                exit(0);
-                */
             int v = -1;
-            //LOG("top: %d\n", top);
             if ( ( v = Pmat[top].first(1)) != -1 )
             {
                 cout << "--------------------------------------------\nif" << endl;

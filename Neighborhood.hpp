@@ -15,6 +15,7 @@ class Neighborhood: public bitMatrix
         Neighborhood(graph_t &g, vid v);
         vid original_id(int idx);
         int mapped_id(vid v);
+        vid get_nodenum();
 
         size_t remain_vtx_num;
     private:
@@ -26,6 +27,7 @@ class Neighborhood: public bitMatrix
         vid *nbeg;
         vid *nend;
         vid *lower;
+        vid nodenum;
         map<vid, int> dict;
 };
 

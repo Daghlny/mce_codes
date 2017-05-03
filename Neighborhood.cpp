@@ -23,7 +23,8 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
     bitMatrix(), v(_v)
 {
     nbeg = g.data[v].nbv;
-    nend = g.data[v].nbv + g.data[v].deg;
+    nodenum = g.data[v].deg;
+    nend = g.data[v].nbv + nodenum;
     std::sort( nbeg, nend );
     lower = std::lower_bound( nbeg, nend, v);
     //FIX: to skip out the function
@@ -32,20 +33,22 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
     }
 
     remain_vtx_num = static_cast<size_t>( nend - lower );
-    init(remain_vtx_num, remain_vtx_num);
+    //init(remain_vtx_num, remain_vtx_num);
+    init(nodenum, nodenum);
     
     //init(g.data[v].deg, g.data[v].deg);
     assign_rows(g);
 }
 
 /** \brief assign every row of Neighborhood the intersection between /
- *         the neighbor and vertex @v
+ *         the neighbor and vertex @v. The neighbors whose id are smaller /
+ *         than @v will only get all "0", because their rows will never used.
  *  \param g graph
  */
 void
 Neighborhood::assign_rows( graph_t &g )
 {
-    for ( vid *nbit = lower; nbit != nend; ++nbit)
+    for ( vid *nbit = nbeg; nbit != nend; ++nbit)
     {
         vid curnbor = *nbit;
 
@@ -54,7 +57,7 @@ Neighborhood::assign_rows( graph_t &g )
             vid *curnbv = g.data[curnbor].nbv;
             vid  curdeg = g.data[curnbor].deg;
 
-            vid mapped_id = static_cast<vid>(nbit - lower);
+            vid mapped_id = static_cast<vid>(nbit - nbeg);
             //FIX: this procedure could be optimized by checking situation
             for( int i = 0; i < curdeg; ++i )
             {
@@ -64,6 +67,9 @@ Neighborhood::assign_rows( graph_t &g )
                     rows[mapped_id].setbit(pos, 1);
                 }
             }
+        } else {
+            vid mapped_id = static_cast<vid>(nbit - nbeg);
+            rows[mapped_id].setall(0);
         }
     }
 }
@@ -87,18 +93,23 @@ Neighborhood::mapped_id(vid v)
         return static_cast<int>(fpos - lower);
 }
 
+vid
+Neighborhood::get_nodenum()
+{
+    return this->nodenum;
+}
+
 int
 Neighborhood::binary_search(vid v)
 {
     int low = 0;
-    int high = nend - lower;
-
+    int high = static_cast<int>(nend - nbeg);
     while ( low <= high )
     {
         int mid = (low + high) / 2;
-        if ( lower[mid] < v )
+        if ( nbeg[mid] < v )
             low = mid + 1;
-        else if ( lower[mid] > v )
+        else if ( nbeg[mid] > v )
             high = mid - 1;
         else 
             return mid;
