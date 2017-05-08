@@ -10,6 +10,36 @@
 #include <cstdint>
 #include "inputbuffer.hpp"
 
+#define BIT32
+
+#ifdef BIT64
+typedef uint64_t elem_t;
+#define EBIT 64
+#define ALLONE 0xffffffffffffffff
+#define ALLZERO 0x0000000000000000
+#endif
+
+#ifdef BIT32
+typedef uint32_t elem_t;
+#define EBIT 32
+#define ALLONE 0xffffffff
+#define ALLZERO 0x00000000
+#endif
+
+#ifdef BIT16
+typedef uint16_t elem_t;
+#define EBIT 16
+#define ALLONE 0xffff
+#define ALLZERO 0x0000
+#endif
+
+#ifdef BIT8
+typedef uint8_t elem_t;
+#define EBIT 8
+#define ALLONE 0xff
+#define ALLZERO 0x00
+#endif
+
 #define LOG(fmt, ...) \
     printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 

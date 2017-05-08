@@ -327,7 +327,7 @@ Degeneracy::init(const char *filepath, vid _nodenum)
     char *linebeg = nullptr, *lineend = nullptr;
     vid curvid = 0;
     dmap = new vid[nodenum];
-    cout << "nodenum: " << nodenum << endl;
+    //cout << "nodenum: " << nodenum << endl;
 
     while ( dbuff.getline(linebeg, lineend) > 0 )
     {
@@ -344,7 +344,7 @@ Degeneracy::init(const char *filepath, vid _nodenum)
             degree = (10 * degree) + int(*linebeg) - 48;
         dd = degree > dd ? degree : dd;
     }
-    cout << ferror(dfile) << endl;
+    //cout << ferror(dfile) << endl;
     fclose(dfile);
 }
 

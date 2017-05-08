@@ -1,7 +1,8 @@
 
 USER_DIR = .
 CPPFLAGS += -isystem ./
-CXXFLAGS += -ggdb -O0 -Wextra -pthread -std=c++11 
+#CXXFLAGS += -ggdb -O0 -Wextra -pthread -std=c++11 
+CXXFLAGS += -O3 -Wextra -pthread -std=c++11 
 CXX = g++
 
 HEADERS = $(USER_DIR)/mce.hpp \

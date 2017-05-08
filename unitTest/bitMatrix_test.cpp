@@ -1,11 +1,13 @@
 
 #include <iostream>
+#include <list>
 
 #include "test.hpp"
 #include "bitMatrix.hpp"
 
 using std::cout;
 using std::endl;
+using std::list;
 
 int ebit(0);
 bitMatrix bmat(3, 200);
@@ -60,7 +62,6 @@ TEST(bitMatrix, bitOperations)
     bmat[0].setall(1);
     EXPECT_EQ(199, bmat[0].last(1));
 
-    cout << "Begin setfront() function TEST" << endl;
     bmat[0].setall(0);
     for (int i = 1; i < 8; ++i)
     {
@@ -78,5 +79,17 @@ TEST(bitMatrix, bitOperations)
     bmat[0].setall(0);
     bmat[0].setfront(200, 1);
     EXPECT_TRUE(bmat[0].all(1));
+
+    bmat[0].setall(0);
+    int ids[] = { 0, 1, 2, 3, 7, 9 };
+    for(int i = 0; i < 6; ++i)
+        bmat[0].setbit(ids[i], 1);
+    EXPECT_EQ(6, bmat[0].allone());
+    bmat[0].setall(0);
+    bmat[0].setfront(100, 1);
+    EXPECT_EQ(100, bmat[0].allone());
+    list<int> ref_inds;
+    bmat[0].allone(ref_inds);
+    EXPECT_EQ(100, ref_inds.size());
 }
 

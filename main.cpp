@@ -1,6 +1,8 @@
 
 #include <iostream>
 #include <cstdio>
+#include <utility>
+#include <sys/time.h>
 #include "BMBK.hpp"
 #include "inputbuffer.hpp"
 #include "Neighborhood.hpp"
@@ -9,13 +11,12 @@
 
 using std::cout;
 using std::endl;
+using std::pair;
 
-int ebit;
 
 int
 main(int argc, char **argv)
 {
-    ebit = sizeof(elem_t) * 8;
     if ( argc < 3 )
         exit(0);
     const char *gfilename = argv[1];
@@ -27,8 +28,29 @@ main(int argc, char **argv)
     fscanf(gfile, "%d", &nodenum);
     fclose(gfile);
 
+
+    struct timeval begin_init_tv;
+    struct timeval end_init_tv;
+    struct timeval end_compute_tv;
+
+    gettimeofday(&begin_init_tv, NULL);
     BMBK bmbk(gfilename, dfilename, nodenum);
-    bmbk.compute();
+    gettimeofday(&end_init_tv, NULL);
+
+    int clique_count = bmbk.compute();
+    printf("There are %d maximal cliques\n", clique_count);
+    gettimeofday(&end_compute_tv, NULL);
+
+
+    pair<int,int> init_time = bmbk.get_running_usec(begin_init_tv, end_init_tv);
+    pair<int,int> compute_time = bmbk.get_running_usec(end_init_tv, end_compute_tv);
+    pair<int,int> total_time = bmbk.get_running_usec(begin_init_tv, end_compute_tv);
+
+    printf("##### Running Report #####\n");
+    printf("Init Time:    %d s %d us\n", init_time.first, init_time.second);
+    printf("Compute Time: %d s %d us\n", compute_time.first, compute_time.second);
+    printf("Total Time:   %d s %d us\n", total_time.first, total_time.second);
 
     return 0;
 }
+

@@ -6,20 +6,15 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <list>
 
 #include "mce.hpp"
 #include "inputbuffer.hpp"
 
 using std::vector;
 using std::string;
+using std::list;
 
-#define EBIT 64
-#define ALLONE 0xffffffffffffffff
-#define ALLZERO 0x0000000000000000
-typedef uint64_t elem_t;
-
-// if this definition is not vaild, can move it into class as a data member
-extern int ebit;
 
 class bitVector
 {
@@ -33,7 +28,12 @@ class bitVector
         int  setfront(int lend, int flag);
         bool all(int flag);
         int first(int flag);
-        int last(int flag);
+        int last(int  flag);
+        //FIX: implement this method used to select the pivot
+        //return all vertices newids which is "1" in bitVector
+        int allone(list<int> &inds);
+        int allone();
+        int setlastone();
 
         //bool &operator[] (const size_t);
         const bool operator[] (const size_t) const;
