@@ -43,22 +43,29 @@ BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
     d(dfilename, nodenum),
     g()
 {
+    struct timeval tvbeg, tvend;
+    gettimeofday(&tvbeg, NULL);
     g.init_g_withddmap(gfilename, d);
+    gettimeofday(&tvend, NULL);
+    pair<int,int> initg_usec = get_running_usec(tvbeg, tvend);
+    cout << "init graph time: " << initg_usec.first << " s " << initg_usec.second << " us" << endl;
 }
 
 int
 BMBK::compute()
 {
     omp_set_num_threads(4);
-#pragma omp parallel for 
+#pragma omp parallel 
 {
+#pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
+        //cout << i << " " << omp_get_thread_num() << endl;
         localbitVector R(g.nodenum);
         localbitVector lbvector(g.nodenum);
         R.setall(0);
         Neighborhood nbhood(g, i);
-        top = 0;
+        int top = 0;
         vid degree = g.data[i].deg;
         if ( degree < 2 )
         {
@@ -83,31 +90,7 @@ BMBK::compute()
             //FIX: here can be optimized
             if ( ( v = Pmat[top].first(1)) != -1 )
             {
-                /* Pivot Selection */
-                list<int> inds;
-
-                Pmat[top].allone(inds);
-
-                //Xmat[top].allone(inds);
-                set<int> indset(inds.begin(), inds.end());
-                int max_num_neighbors = -1;
-                int pivot = 0;
-
-                for ( auto indit = indset.begin(); indit != indset.end(); ++indit )
-                {
-                    lbvector.setWithBitAnd(nbhood[*indit], Pmat[top]);
-                    int onenum = lbvector.allone();
-                    if ( onenum > max_num_neighbors )
-                    {
-                        pivot = *indit;
-                        max_num_neighbors = onenum;
-                    }
-                    //printf("node: %d degree: %d inds.size: %d max_nbors: %d\n", i, degree, indset.size(), max_num_neighbors);
-                }
-
-                //printf("pivot: %d\n", pivot);
-                /* End of Pivot Selection */
-
+                vid pivot = v;
                 Pmat[top].setbit(pivot, 0);
                 //FIX: this sentence maybe has wrong
                 Pmat[top+1].setWithBitAnd(nbhood[pivot], Pmat[top]);
