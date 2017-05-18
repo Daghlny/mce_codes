@@ -18,9 +18,16 @@ int
 main(int argc, char **argv)
 {
     if ( argc < 3 )
+    {
+        printf("Program GraphFileName DegeneracyFileName [ThreadNum]\n");
         exit(0);
+    }
     const char *gfilename = argv[1];
     const char *dfilename = argv[2];
+
+    int thread_num = 1;
+    if (argv == 4)
+        thread_num = atoi(argv[3]);
 
     FILE *gfile = fopen(gfilename, "r");
     vid nodenum = 0;
@@ -37,7 +44,7 @@ main(int argc, char **argv)
     BMBK bmbk(gfilename, dfilename, nodenum);
     gettimeofday(&end_init_tv, NULL);
 
-    int clique_count = bmbk.compute();
+    int clique_count = bmbk.compute(thread_num);
     printf("There are %d maximal cliques\n", clique_count);
     gettimeofday(&end_compute_tv, NULL);
 

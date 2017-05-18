@@ -52,9 +52,9 @@ BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
 }
 
 int
-BMBK::compute()
+BMBK::compute(int thread_num = 1)
 {
-    omp_set_num_threads(4);
+    omp_set_num_threads(thread_num);
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
