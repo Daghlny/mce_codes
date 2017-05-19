@@ -54,7 +54,16 @@ BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
 int
 BMBK::compute()
 {
-    omp_set_num_threads(4);
+    int thread_num = 8;
+    omp_set_num_threads(thread_num);
+
+    int *clique_num = new int[thread_num+5];
+    memset(clique_num, 0, sizeof(int) * (thread_num+5));
+    int *max_nodes = new int[thread_num + 5];
+    memset(max_nodes, 0, sizeof(int) * (thread_num + 5));
+    int *clique_2_num = new int[thread_num + 5];
+    memset(clique_2_num, 0, sizeof(int) * (thread_num + 5));
+
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
@@ -67,22 +76,30 @@ BMBK::compute()
         Neighborhood nbhood(g, i);
         int top = 0;
         vid degree = g.data[i].deg;
+        int threadID = omp_get_thread_num();
         if ( degree < 2 )
         {
+            clique_num[threadID]++;
             continue;
         }
         //FIX: how to manage this memory
         int *Rstack = new int[degree+2];
         memset(Rstack, 0, sizeof(int) * (degree+2));
         //FIX: a direct variable access should be optimized
-        bitMatrix Pmat(degree+2, nbhood.get_nodenum());
+        // deleted by Yinuo: bitMatrix Pmat(degree+2, nbhood.get_nodenum());
+        bitMatrix Pmat(nbhood.remain_vtx_num+2, nbhood.remain_vtx_num);
         //FIX: this phase can be optimized
         Pmat[top].setall(1);
-        bitMatrix Xmat(degree+2, degree);
+        // deleted by Yinuo: bitMatrix Xmat(degree+2, degree);
+        bitMatrix Xmat(nbhood.remain_vtx_num + 2, nbhood.remain_vtx_num);
 
+        /*
         int pre_processed = static_cast<int>(nbhood.get_nodenum() - nbhood.remain_vtx_num);
+        if ( pre_processed > max_nodes[threadID] )
+            max_nodes[threadID] = pre_processed;
         Xmat[top].setfront(pre_processed, 1);
         Pmat[top].setfront(pre_processed, 0);
+        */
 
         while ( top >= 0 )
         {
@@ -103,6 +120,13 @@ BMBK::compute()
             else {
                 if ( Xmat[top].all(0) )
                 {
+                    /*
+                    list<int> clique;
+                    R.allone(clique);
+                    if ( clique.size() == 2 )
+                        clique_2_num[threadID]++;
+                        */
+                    clique_num[threadID]++;
                     //you should output @R here as a maximal clique
                 }
                 R.setbit(Rstack[top], 0);
@@ -113,7 +137,17 @@ BMBK::compute()
         delete[] Rstack;
     }
 }
-    return 0;
+    int result = 0;
+    for (int i = 0; i < thread_num; ++i)
+    {
+        result += clique_num[i];
+        printf("Thread %d's maximum preprocessed neighbors number: %d\n", i, max_nodes[i]);
+        printf("Thread %d's 2-clique number: %d\n", i, clique_2_num[i]);
+    }
+    delete[] clique_num;
+    delete[] max_nodes;
+    delete[] clique_2_num;
+    return result;
 }
 
 void

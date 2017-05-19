@@ -51,7 +51,7 @@ bitVector::setbit(int ind, int flag)
     //if ( ind > EBIT * num - 1 )
     if (ind > valid_bit_num - 1 || ind < 0)
     {
-        LOG("invalid @ind value (%d)\n", ind);
+        LOG("invalid @ind value (%d) with valid_bit_num (%d)\n", ind, valid_bit_num);
         return -1;
     }
     int offset = ind % (EBIT);

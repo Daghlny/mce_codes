@@ -27,6 +27,8 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
     nend = g.data[v].nbv + nodenum;
     std::sort( nbeg, nend );
     lower = std::lower_bound( nbeg, nend, v);
+    // Added by Yinuo
+    nodenum = static_cast<size_t>(nend-lower);
     //FIX: to skip out the function
     if ( lower == nend ){
         // nothing to do
@@ -48,7 +50,8 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
 void
 Neighborhood::assign_rows( graph_t &g )
 {
-    for ( vid *nbit = nbeg; nbit != nend; ++nbit)
+    // This for loop's condition is changed by Yinuo
+    for ( vid *nbit = lower; nbit != nend; ++nbit)
     {
         vid curnbor = *nbit;
 
@@ -57,7 +60,7 @@ Neighborhood::assign_rows( graph_t &g )
             vid *curnbv = g.data[curnbor].nbv;
             vid  curdeg = g.data[curnbor].deg;
 
-            vid mapped_id = static_cast<vid>(nbit - nbeg);
+            vid mapped_id = static_cast<vid>(nbit - lower);
             //FIX: this procedure could be optimized by checking situation
             for( int i = 0; i < curdeg; ++i )
             {
@@ -68,7 +71,8 @@ Neighborhood::assign_rows( graph_t &g )
                 }
             }
         } else {
-            vid mapped_id = static_cast<vid>(nbit - nbeg);
+            printf("Something wrong in Neighborhood::assign_rows()\n");
+            vid mapped_id = static_cast<vid>(nbit - lower);
             rows[mapped_id].setall(0);
         }
     }
@@ -102,8 +106,10 @@ Neighborhood::get_nodenum()
 int
 Neighborhood::binary_search(vid v)
 {
-    int low = 0;
+    // Added by Yinuo
+    int low = static_cast<int>(lower-nbeg);
     int high = static_cast<int>(nend - nbeg);
+    int lowbound = low;
     while ( low <= high )
     {
         int mid = (low + high) / 2;
@@ -112,7 +118,7 @@ Neighborhood::binary_search(vid v)
         else if ( nbeg[mid] > v )
             high = mid - 1;
         else 
-            return mid;
+            return mid-lowbound;
     }
     return -1;
 }
