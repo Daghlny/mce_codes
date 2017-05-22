@@ -63,35 +63,47 @@ BMBK::compute()
     memset(max_nodes, 0, sizeof(int) * (thread_num + 5));
     int *clique_2_num = new int[thread_num + 5];
     memset(clique_2_num, 0, sizeof(int) * (thread_num + 5));
-
+    
+    printf("### Finish compute's initalization work\n");
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
         //cout << i << " " << omp_get_thread_num() << endl;
+        int threadID = omp_get_thread_num();
+        vid degree = g.data[i].deg;
+
+        //if ( degree < 1 ) continue;
+        Neighborhood nbhood(g, i);
         localbitVector R(g.nodenum);
         localbitVector lbvector(g.nodenum);
         R.setall(0);
-        Neighborhood nbhood(g, i);
         int top = 0;
-        vid degree = g.data[i].deg;
-        int threadID = omp_get_thread_num();
-        if ( degree < 2 )
-        {
-            clique_num[threadID]++;
-            continue;
-        }
+
+
+        //printf("node: %d degree: %d\n", i, degree);
         //FIX: how to manage this memory
+        //vector<int> Rvector(degree+2);
+
         int *Rstack = new int[degree+2];
+        continue;
+
         memset(Rstack, 0, sizeof(int) * (degree+2));
-        //FIX: a direct variable access should be optimized
+
         // deleted by Yinuo: bitMatrix Pmat(degree+2, nbhood.get_nodenum());
         bitMatrix Pmat(nbhood.remain_vtx_num+2, nbhood.remain_vtx_num);
         //FIX: this phase can be optimized
         Pmat[top].setall(1);
         // deleted by Yinuo: bitMatrix Xmat(degree+2, degree);
         bitMatrix Xmat(nbhood.remain_vtx_num + 2, nbhood.remain_vtx_num);
+        if ( nbhood.remain_vtx_num > max_nodes[threadID]  )
+            max_nodes[threadID] = nbhood.remain_vtx_num;
+        if ( degree < 1000000 )
+        {
+            //clique_num[threadID]++;
+            continue;
+        }
 
         /*
         int pre_processed = static_cast<int>(nbhood.get_nodenum() - nbhood.remain_vtx_num);
@@ -120,12 +132,10 @@ BMBK::compute()
             else {
                 if ( Xmat[top].all(0) )
                 {
-                    /*
                     list<int> clique;
                     R.allone(clique);
                     if ( clique.size() == 2 )
                         clique_2_num[threadID]++;
-                        */
                     clique_num[threadID]++;
                     //you should output @R here as a maximal clique
                 }
@@ -136,7 +146,7 @@ BMBK::compute()
         }
         delete[] Rstack;
     }
-}
+}// end of OpenMP parallel section
     int result = 0;
     for (int i = 0; i < thread_num; ++i)
     {
@@ -144,9 +154,12 @@ BMBK::compute()
         printf("Thread %d's maximum preprocessed neighbors number: %d\n", i, max_nodes[i]);
         printf("Thread %d's 2-clique number: %d\n", i, clique_2_num[i]);
     }
-    delete[] clique_num;
-    delete[] max_nodes;
-    delete[] clique_2_num;
+    if ( clique_num != NULL )
+        delete[] clique_num;
+    if ( max_nodes != NULL )
+        delete[] max_nodes;
+    if ( clique_2_num != NULL )
+        delete[] clique_2_num;
     return result;
 }
 

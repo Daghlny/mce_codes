@@ -14,6 +14,21 @@ using std::bitset;
 using std::string;
 using std::hex;
 
+uint32_t masks_32bits[32] = {
+    0x80000000,0x40000000,0x20000000,0x10000000,
+    0x08000000,0x04000000,0x02000000,0x01000000,
+    0x00800000,0x00400000,0x00200000,0x00100000,
+    0x00080000,0x00040000,0x00020000,0x00010000,
+    0x00008000,0x00004000,0x00002000,0x00001000,
+    0x00000800,0x00000400,0x00000200,0x00000100,
+    0x00000080,0x00000040,0x00000020,0x00000010,
+    0x00000008,0x00000004,0x00000002,0x00000001,
+};
+
+uint8_t masks_8bits[8] = {
+    0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01
+};
+
 bitVector::bitVector():
     head(nullptr), num(0)
 {
@@ -51,7 +66,7 @@ bitVector::setbit(int ind, int flag)
     //if ( ind > EBIT * num - 1 )
     if (ind > valid_bit_num - 1 || ind < 0)
     {
-        LOG("invalid @ind value (%d) with valid_bit_num (%d)\n", ind, valid_bit_num);
+        LOG("invalid @ind value (%d)\n", ind);
         return -1;
     }
     int offset = ind % (EBIT);
@@ -227,17 +242,28 @@ bitVector::allone(list<int> &inds)
 {
     int id = 0;
     int count = 0;
-    while(id < valid_bit_num)
+    uint8_t *convert_ptr = (uint8_t*)(head);
+    int offset = valid_bit_num % 8;
+    int valid_byte_num = valid_bit_num / 8;
+    int cnt = 0;
+    for (; cnt < valid_byte_num; ++cnt)
     {
-        int num = id / EBIT;
-        int offset = id % EBIT;
-        if ( (head[num] >> (EBIT-offset-1)) & 0x01 != 0 )
+        if (convert_ptr[cnt] == 0)
+            continue;
+        for (int off = 0; off < 8; ++off)
+            if (convert_ptr[cnt] & masks_8bits[off] != 0 )
+            {
+                inds.push_back(cnt*8 + off);
+                ++count;
+            }
+    }
+    for (int off = 0; off < offset ; ++off)
+        if (convert_ptr[cnt] & masks_8bits[off] != 0)
         {
-            inds.push_back(id);
+            inds.push_back(cnt*8 + off);
             ++count;
         }
-        ++id;
-    }
+
     return count;
 }
 
