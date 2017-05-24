@@ -1,8 +1,9 @@
 
 /*
- * Input a undirected graph data file, and it will compute the degeneracy order.
- * Then it will record the statistics of neighborhood with degeneracy vertices.
- * The output data format is json
+ * @File Description
+ * Input a undirected graph data file, the external program will compute the degeneracy order.
+ * Then get_ddneibor_cc will record the statistics of neighborhood with degeneracy vertices.
+ * The format of output data is JSON.
  */
 
 #include <cstdio>

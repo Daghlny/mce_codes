@@ -47,6 +47,9 @@ bitVector::bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num):
     //nothing to do
 }
 
+/** \brief set all bit in bitVector to the given bitvalue
+ *  \param flag the given value("0" or "1")
+ */
 void
 bitVector::setall(int flag)
 {
@@ -234,7 +237,8 @@ bitVector::last(int flag)
 }
 
 
-/** \brief get all indices of "1" in bitVector
+/** \brief get all indices of "1" in bitVector, this function is used
+ *  for get maximal clique vertices in Pmat
  *  \param inds the return indices reference
  */
 int
@@ -306,6 +310,9 @@ bitVector::setlastone()
     return -1;
 }
 
+/** \brief return the ind bit in bitVector's value("0" or "1")
+ *  \param ind the required bit index in bitVector
+ */
 const bool
 bitVector::operator[] (const size_t ind) const
 {
@@ -346,6 +353,8 @@ bitVector::setWithBitOR(bitVector &lhs, bitVector &rhs)
     return 0;
 }
 
+/** \brief return the binary presentation of bitVector with std::string
+ */
 string 
 bitVector::to_string()
 {
@@ -358,7 +367,7 @@ bitVector::to_string()
     return res;
 }
 
-/* localbitVector */
+/* class localbitVector */
 
 /** \brief the constructor of localbitVector, and assign default value\
  *         as 0
@@ -388,7 +397,7 @@ localbitVector::~localbitVector()
 }
 
 
-/* bitMatrix */
+/* class bitMatrix */
 
 bitMatrix::bitMatrix():
     r_num(0), c_num(0), data(nullptr), rows(0)
@@ -434,6 +443,9 @@ bitMatrix::~bitMatrix()
     delete[] data;
 }
 
+/** \brief get the ind row of bitVector
+ *  \param ind required row number of matrix
+ */
 bitVector &
 bitMatrix::operator[] (const size_t ind)
 {
@@ -445,6 +457,9 @@ bitMatrix::operator[] (const size_t ind)
     return rows[ind];
 }
 
+/** \brief const version
+ *  \param ind required row number of matrix
+ */
 const bitVector &
 bitMatrix::operator[] (const size_t ind) const
 {
@@ -456,6 +471,8 @@ bitMatrix::operator[] (const size_t ind) const
     return rows[ind];
 }
 
+/** \brief print bitMatrix row by row
+ */
 void
 bitMatrix::print()
 {

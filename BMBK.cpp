@@ -51,6 +51,9 @@ BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
     cout << "init graph time: " << initg_usec.first << " s " << initg_usec.second << " us" << endl;
 }
 
+/** \brief compute all maximal clique
+ *  \thread_num OpenMP's thread number parameter
+ */
 int
 BMBK::compute(int thread_num = 1)
 {
