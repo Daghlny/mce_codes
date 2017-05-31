@@ -36,7 +36,7 @@ class bitVector
         int setlastone();
 
         //bool &operator[] (const size_t);
-        const bool operator[] (const size_t) const;
+        bool operator[] (const size_t) const;
 
         // set bitVector's newvalue by AND operation between two other bitVectors
         int setWithBitAnd(bitVector& lhs, bitVector& rhs);

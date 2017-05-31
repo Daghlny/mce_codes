@@ -2,7 +2,7 @@
 USER_DIR = .
 CPPFLAGS += -isystem ./
 #CXXFLAGS += -ggdb -O0 -Wextra -pthread -std=c++11 
-CXXFLAGS += -O3 -Wextra -pthread -std=c++11 -fopenmp
+CXXFLAGS += -O3 -Wextra -pthread -std=c++11 -fopenmp -Wno-unused-result -Wno-format
 CXX = g++
 
 HEADERS = $(USER_DIR)/mce.hpp \
@@ -55,3 +55,5 @@ bkdebug: bkMain.cpp inputbuffer.cpp bk.cpp $(HEADERS)
 	$(COMPILER) $(GDBFLAGS) ./bkMain.cpp ./bk.cpp ./inputbuffer.cpp -o debug_bk.out
 mat: bitMatrix.cpp bitMatrix.hpp main.cpp
 	$(COMPILER) $(GDBFLAGS) ./bitMatrix.cpp ./main.cpp -o debug_bitMat.out
+
+

@@ -54,7 +54,7 @@ void
 bitVector::setall(int flag)
 {
     elem_t eflag = flag == 0 ? ALLZERO : ALLONE;
-    for (int i = 0; i < num; ++i)
+    for (size_t i = 0; i < num; ++i)
         head[i] = eflag;
 }
 
@@ -67,7 +67,7 @@ int
 bitVector::setbit(int ind, int flag)
 {
     //if ( ind > EBIT * num - 1 )
-    if (ind > valid_bit_num - 1 || ind < 0)
+    if ((size_t)ind > valid_bit_num - 1 || ind < 0)
     {
         LOG("invalid @ind value (%d)\n", ind);
         return -1;
@@ -99,7 +99,7 @@ bitVector::setbit(int ind, int flag)
 int
 bitVector::setfront(int lend, int flag)
 {
-    if ( lend < 0 || lend > valid_bit_num ){
+    if ( lend < 0 || (size_t)lend > valid_bit_num ){
         LOG("lend(%d) is out of valid range[0, %d)\n", lend, valid_bit_num);
         return -1;
     }
@@ -135,11 +135,11 @@ bitVector::all(int flag)
 {
     if (flag == 0)
     {
-        for ( int i = 0; i < num; ++i )
+        for ( size_t i = 0; i < num; ++i )
             if ( head[i] > 0 ) return false;
         return true;
     } else {
-        for (int i = 0; i < num; ++i)
+        for (size_t i = 0; i < num; ++i)
             if (head[i] == 0) return false;
         return true;
     }
@@ -153,14 +153,14 @@ bitVector::first(int flag)
     if (flag == 0)
     {
         // search for first of "0"
-        for (int i = 0; i < num; ++i)
+        for (size_t i = 0; i < num; ++i)
         {
             if ( head[i] == ALLONE ) continue;
             for ( int bit = 0; bit < EBIT; ++bit )
             {
                 if ( ((elem_t)(head[i] >> (EBIT-bit-1)) & (0x01)) == 0 )
                 {
-                    int res = i * EBIT + bit;
+                    size_t res = i * EBIT + bit;
                     if ( res < valid_bit_num )
                         return res;
                     else
@@ -171,14 +171,14 @@ bitVector::first(int flag)
     } else
     {
         // search for first of "1"
-        for ( int i = 0; i < num; ++i )
+        for ( size_t i = 0; i < num; ++i )
         {
             if (head[i] == ALLZERO) continue;
             for (int bit = 0; bit < EBIT; ++bit)
             {
                 if ( ((elem_t)(head[i] >> (EBIT-bit-1)) & (0x01)) != 0 )
                 {
-                    int res = i * EBIT + bit;
+                    size_t res = i * EBIT + bit;
                     if ( res < valid_bit_num )
                         return res;
                     else 
@@ -206,7 +206,7 @@ bitVector::last(int flag)
             {
                 if ( ((elem_t)(head[i] >> (EBIT-bit-1)) & (0x01)) == 0)
                 {
-                    int res = i * EBIT + bit;
+                    size_t res = i * EBIT + bit;
                     if ( res < valid_bit_num )
                         return res;
                     else
@@ -224,7 +224,7 @@ bitVector::last(int flag)
             {
                 if ( ((elem_t)(head[i] >> (EBIT-bit-1)) & (0x01)) != 0)
                 {
-                    int res = i * EBIT + bit;
+                    size_t res = i * EBIT + bit;
                     if ( res < valid_bit_num )
                         return res;
                     else
@@ -313,7 +313,7 @@ bitVector::setlastone()
 /** \brief return the ind bit in bitVector's value("0" or "1")
  *  \param ind the required bit index in bitVector
  */
-const bool
+bool
 bitVector::operator[] (const size_t ind) const
 {
     //assert( ind < EBIT*num );
@@ -334,7 +334,7 @@ bitVector::setWithBitAnd(bitVector &lhs, bitVector &rhs)
 {
     if (lhs.num != rhs.num )
         return -1;
-    for ( int i = 0; i < rhs.num; ++i )
+    for ( size_t i = 0; i < rhs.num; ++i )
         head[i] = lhs.head[i] & rhs.head[i];
     return 0;
 }
@@ -348,7 +348,7 @@ bitVector::setWithBitOR(bitVector &lhs, bitVector &rhs)
 {
     if (lhs.num != rhs.num )
         return -1;
-    for (int i = 0; i < rhs.num; ++i)
+    for (size_t i = 0; i < rhs.num; ++i)
         head[i] = lhs.head[i] | rhs.head[i];
     return 0;
 }
@@ -359,7 +359,7 @@ string
 bitVector::to_string()
 {
     string res = "";
-    for ( int i = 0; i < num; ++i )
+    for ( size_t i = 0; i < num; ++i )
     {
         bitset<EBIT> tmp_bs(head[i]);
         res += (tmp_bs.to_string() + " ");
@@ -431,7 +431,7 @@ bitMatrix::init(size_t _row, size_t _column)
     /* initialize the @data with 0 */
     memset(data, 0x00, sizeof(elem_t) * elem_num);
 
-    for (int i = 0; i < r_num; ++i)
+    for (size_t i = 0; i < r_num; ++i)
     {
         rows[i] = bitVector(data+i*elem_num_r, elem_num_r, c_num);
     }
@@ -465,7 +465,7 @@ bitMatrix::operator[] (const size_t ind) const
 {
     if ( ind >= rows.size() )
     {
-        LOG("@ind(%d) is bigger than rows.size()(%d)\n", ind, rows.size());
+        LOG("@ind(%u) is bigger than rows.size()(%u)\n", ind, rows.size());
         exit(0);
     }
     return rows[ind];
@@ -476,7 +476,7 @@ bitMatrix::operator[] (const size_t ind) const
 void
 bitMatrix::print()
 {
-    for ( int i = 0; i < r_num; ++i)
+    for ( size_t i = 0; i < r_num; ++i)
         cout << rows[i].to_string() << endl;
 }
 

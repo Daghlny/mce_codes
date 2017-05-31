@@ -8,7 +8,7 @@
 #include "inputbuffer.hpp"
 
 #define LOG(fmt, ...) \
-    printf("%s | L:%4d | %s() |: "fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+    printf("%s | L:%4d | %s() |: " fmt, strrchr(__FILE__, '/')+1, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 using std::string;
 
@@ -66,7 +66,7 @@ inputbuffer::getline(char *&lbeg, char *&lend)
 int
 inputbuffer::FillInputBuffer(char *pos)
 {
-    int i = endpos - pos;
+    size_t i = endpos - pos;
     if( i >= size ) return 0;
 
     if(pos < endpos)
@@ -84,7 +84,7 @@ inputbuffer::FillInputBuffer(char *pos)
 
     if(!feof(file))
     {
-        int byteread = fread( endpos, 1, size-i, file );
+        size_t byteread = fread( endpos, 1, size-i, file );
         endpos += byteread;
         if( byteread < size-i ){
             if(!feof(file) && ferror(file)){

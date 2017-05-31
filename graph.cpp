@@ -351,7 +351,7 @@ Degeneracy::init(const char *filepath, vid _nodenum)
 vid&
 Degeneracy::operator[](const size_t id)
 {
-    if ( id >= nodenum )
+    if ( (vid)id >= nodenum )
     {
         LOG("ID(%lld) is bigger than @nodenum(%lld)\n", id, nodenum);
         exit(0);
@@ -362,7 +362,7 @@ Degeneracy::operator[](const size_t id)
 const vid&
 Degeneracy::operator[](const size_t id) const
 {
-    if ( id >= nodenum )
+    if ( (vid)id >= nodenum )
     {
         LOG("ID(%lld) is bigger than @nodenum\n", id);
         exit(0);

@@ -32,7 +32,7 @@ main(int argc, char **argv)
     FILE *gfile = fopen(gfilename, "r");
     vid nodenum = 0;
     //FIX: if replace "%d" with "lld", there is a error
-    fscanf(gfile, "%d", &nodenum);
+    (void) fscanf(gfile, "%ld", &nodenum);
     fclose(gfile);
 
 
