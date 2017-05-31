@@ -58,12 +58,15 @@ int
 BMBK::compute(int thread_num = 1)
 {
     omp_set_num_threads(thread_num);
+    int *clique_num_perThread = new int[thread_num + 5];
+    memset(clique_num_perThread, 0, sizeof(int) * (thread_num+5));
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
         //cout << i << " " << omp_get_thread_num() << endl;
+        int threadID = omp_get_thread_num();
         localbitVector R(g.nodenum);
         localbitVector lbvector(g.nodenum);
         R.setall(0);
@@ -72,6 +75,7 @@ BMBK::compute(int thread_num = 1)
         vid degree = g.data[i].deg;
         if ( degree < 2 )
         {
+            clique_num_perThread[threadID]++;
             continue;
         }
         //FIX: how to manage this memory
@@ -107,6 +111,7 @@ BMBK::compute(int thread_num = 1)
                 if ( Xmat[top].all(0) )
                 {
                     //you should output @R here as a maximal clique
+                    clique_num_perThread[threadID]++;
                 }
                 R.setbit(Rstack[top], 0);
                 top--;
@@ -116,7 +121,10 @@ BMBK::compute(int thread_num = 1)
         delete[] Rstack;
     }
 }
-    return 0;
+    int totalclique = 0;
+    for (int i = 0; i < thread_num; ++i)
+        totalclique += clique_num_perThread[i];
+    return totalclique;
 }
 
 void

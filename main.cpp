@@ -26,7 +26,7 @@ main(int argc, char **argv)
     const char *dfilename = argv[2];
 
     int thread_num = 1;
-    if (argv == 4)
+    if (argc == 4)
         thread_num = atoi(argv[3]);
 
     FILE *gfile = fopen(gfilename, "r");
