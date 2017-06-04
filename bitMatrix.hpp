@@ -44,9 +44,9 @@ class bitVector
         string to_string();
 
     protected:
-        elem_t *head;
-        size_t num;
-        size_t valid_bit_num;
+        elem_t *head;           // the pointer in corresponding bitMatrix.data
+        size_t num;             // number of elem in this bitVector
+        size_t valid_bit_num;   // real amount of bits in bitVector
 };
 
 class localbitVector: public bitVector
@@ -73,12 +73,11 @@ class bitMatrix
         virtual void print();
 
     protected:
-        size_t r_num;
-        size_t c_num;
-        size_t elem_num;
-        size_t elem_num_r;
+        size_t r_num;       // Row number of Matrix
+        size_t c_num;       // Column number of Matrix
+        size_t elem_num;    // total elem number of Matrix(including all rows)
+        size_t elem_num_r;  // elem number of each row
 
-        size_t bitnum;
         elem_t *data;
         vector<bitVector> rows;
 };

@@ -25,6 +25,7 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
     nbeg = g.data[v].nbv;
     nodenum = g.data[v].deg;
     nend = g.data[v].nbv + nodenum;
+    // FIX: This can be optimized.
     std::sort( nbeg, nend );
     lower = std::lower_bound( nbeg, nend, v);
     //FIX: to skip out the function

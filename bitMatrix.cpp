@@ -25,6 +25,17 @@ static uint32_t masks_32bits[32] = {
     0x00000008,0x00000004,0x00000002,0x00000001,
 };
 
+static uint32_t front_32bits[32] = {
+    0x8fffffff,0x4fffffff,0x2fffffff,0x1fffffff,
+    0x08ffffff,0x04ffffff,0x02ffffff,0x01ffffff,
+    0x008fffff,0x004fffff,0x002fffff,0x001fffff,
+    0x0008ffff,0x0004ffff,0x0002ffff,0x0001ffff,
+    0x00008fff,0x00004fff,0x00002fff,0x00001fff,
+    0x000008ff,0x000004ff,0x000002ff,0x000001ff,
+    0x0000008f,0x0000004f,0x0000002f,0x0000001f,
+    0x00000008,0x00000004,0x00000002,0x00000001,
+};
+
 static uint8_t masks_8bits[8] = {
     0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01
 };
@@ -53,9 +64,13 @@ bitVector::bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num):
 void
 bitVector::setall(int flag)
 {
-    elem_t eflag = flag == 0 ? ALLZERO : ALLONE;
+    //elem_t eflag = flag == 0 ? ALLZERO : ALLONE;
+    uint8_t bitflag = flag == 0 ? 0x00 : 0xff;
+    memset(head, bitflag, sizeof(elem_t) * num);
+    /*
     for (size_t i = 0; i < num; ++i)
         head[i] = eflag;
+        */
 }
 
 /** \brief set the given index corresponding bit as given value. /
@@ -72,22 +87,16 @@ bitVector::setbit(int ind, int flag)
         LOG("invalid @ind value (%d)\n", ind);
         return -1;
     }
-    int offset = ind % (EBIT);
-    int cnt = ind / EBIT;
-    if ( flag == 0 )
+    uint32_t *convert_ptr = (uint32_t*)head;
+    int offset = ind % 32;
+    int cnt = ind / 32;
+    if (flag == 0)
     {
-        elem_t mask = 0;
-        if ( offset == 0 )
-            mask = (ALLONE >> 1);
-        else if ( offset == EBIT-1 )
-            mask = (ALLONE << 1);
-        else
-            mask = (ALLONE << (EBIT - offset)) | (ALLONE >> (offset + 1));
-        head[cnt] = head[cnt] & mask;
-    } else
+        uint64_t mask = ~masks_32bits[offset];
+        convert_ptr[cnt] &= mask;
+    } else 
     {
-        elem_t mask = (elem_t)0x01 << ( EBIT - offset - 1 );
-        head[cnt] = head[cnt] | mask;
+        convert_ptr[cnt] |= masks_32bits[offset];
     }
     return 0;
 }
@@ -150,9 +159,12 @@ bitVector::all(int flag)
 int 
 bitVector::first(int flag)
 {
+    uint32_t *convert_ptr = (uint32_t*)head;
+    double e32_num = (EBIT / 32) * num;
     if (flag == 0)
     {
         // search for first of "0"
+        // This branch is not optimized, because it is not used in BMBK
         for (size_t i = 0; i < num; ++i)
         {
             if ( head[i] == ALLONE ) continue;
@@ -170,21 +182,13 @@ bitVector::first(int flag)
         }
     } else
     {
-        // search for first of "1"
-        for ( size_t i = 0; i < num; ++i )
-        {
-            if (head[i] == ALLZERO) continue;
-            for (int bit = 0; bit < EBIT; ++bit)
-            {
-                if ( ((elem_t)(head[i] >> (EBIT-bit-1)) & (0x01)) != 0 )
-                {
-                    size_t res = i * EBIT + bit;
-                    if ( res < valid_bit_num )
-                        return res;
-                    else 
-                        return -1;
-                }
-            }
+        for (size_t i = 0; i < e32_num; ++i){
+            if ( convert_ptr[i] == ALLZERO) continue;
+            int bit = 0;
+            while(bit < 32 && convert_ptr[i] < masks_32bits[bit])
+                ++bit;
+            size_t res = i * 32 + bit;
+            return (res < valid_bit_num) ? res : -1;
         }
     }
     return -1;
@@ -306,6 +310,7 @@ bitVector::setlastone()
     {
         if (head[i] == ALLZERO) continue;
         head[i] = head[i] & (head[i]-1);
+        break;
     }
     return -1;
 }
@@ -439,7 +444,6 @@ bitMatrix::init(size_t _row, size_t _column)
 
 bitMatrix::~bitMatrix()
 {
-    rows.clear();
     delete[] data;
 }
 

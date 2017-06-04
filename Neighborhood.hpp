@@ -17,17 +17,17 @@ class Neighborhood: public bitMatrix
         int mapped_id(vid v);
         vid get_nodenum();
 
-        size_t remain_vtx_num;
+        size_t remain_vtx_num;  // number of Later Neighbors
     private:
         void twoAdjlistAND(vid *lower, vid *nb, int index);
         void assign_rows(graph_t &g);
         int  binary_search(vid v);
 
-        vid v;
-        vid *nbeg;
-        vid *nend;
-        vid *lower;
-        vid nodenum;
+        vid v;              // v's original ID
+        vid *nbeg;          // begin iterator of adjlist
+        vid *nend;          // out-of-range end iterator of adjlist
+        vid *lower;         // Later Neighbors' begin iter of v
+        vid nodenum;        // total number of neighbors of v
         map<vid, int> dict;
 };
 

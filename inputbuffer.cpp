@@ -107,13 +107,15 @@ inputbuffer::getsize(){
 void
 inputbuffer::clear()
 {
-    free(buff);
+    if (buff != nullptr)
+        free(buff);
     buff = curpos = endpos = NULL;
     size = 0;
 }
 
 inputbuffer::~inputbuffer()
 {
-    free(buff);
+    if (buff != nullptr)
+        free(buff);
 }
 

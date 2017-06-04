@@ -79,14 +79,17 @@ BMBK::compute(int thread_num = 1)
             continue;
         }
         //FIX: how to manage this memory
-        int *Rstack = new int[degree+2];
-        memset(Rstack, 0, sizeof(int) * (degree+2));
+        //int *Rstack = new int[degree+2];
+        vector<int> Rstack(degree+2);
+        //memset(Rstack, 0, sizeof(int) * (degree+2));
         //FIX: a direct variable access should be optimized
+        //FIX: the neighborhood size of current selected vertex is original degree, not degeneracy degree
         bitMatrix Pmat(degree+2, nbhood.get_nodenum());
         //FIX: this phase can be optimized
         Pmat[top].setall(1);
         bitMatrix Xmat(degree+2, degree);
 
+        //cout << i << " " << nbhood.remain_vtx_num << " " << nbhood.get_nodenum() << endl;
         int pre_processed = static_cast<int>(nbhood.get_nodenum() - nbhood.remain_vtx_num);
         Xmat[top].setfront(pre_processed, 1);
         Pmat[top].setfront(pre_processed, 0);
@@ -110,6 +113,18 @@ BMBK::compute(int thread_num = 1)
             else {
                 if ( Xmat[top].all(0) )
                 {
+                    /* These codes are used for getting exact clique */
+                    list<int> clique;
+                    R.allone(clique);
+                    cout << "----------------------------" << endl;
+                    for ( auto ver : clique )
+                        cout << ver << " ";
+                    cout << endl;
+
+                    for (int i = 0; i <= top; ++i)
+                        cout << Rstack[i] << " ";
+                    cout << endl;
+
                     //you should output @R here as a maximal clique
                     clique_num_perThread[threadID]++;
                 }
@@ -118,12 +133,13 @@ BMBK::compute(int thread_num = 1)
                 //R.setlastone();
             }
         }
-        delete[] Rstack;
+        //delete[] Rstack;
     }
 }
     int totalclique = 0;
     for (int i = 0; i < thread_num; ++i)
         totalclique += clique_num_perThread[i];
+    delete[] clique_num_perThread;
     return totalclique;
 }
 

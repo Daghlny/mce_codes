@@ -61,7 +61,7 @@ struct vtype
     vid deg;
 };
 
-struct graph_t 
+class graph_t 
 {
     public:
         graph_t();
@@ -87,7 +87,7 @@ struct graph_t
         vid   nodenum;
 };
 
-struct Degeneracy
+class Degeneracy
 {
     public:
         Degeneracy();

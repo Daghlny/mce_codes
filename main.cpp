@@ -26,7 +26,7 @@ main(int argc, char **argv)
     const char *dfilename = argv[2];
 
     int thread_num = 1;
-    if (argc == 4)
+    if (argc >= 4)
         thread_num = atoi(argv[3]);
 
     FILE *gfile = fopen(gfilename, "r");
@@ -44,19 +44,25 @@ main(int argc, char **argv)
     BMBK bmbk(gfilename, dfilename, nodenum);
     gettimeofday(&end_init_tv, NULL);
 
+    printf("\n");
+
     int clique_count = bmbk.compute(thread_num);
+    printf("##### Maximal Clique Statistics #####\n");
     printf("There are %d maximal cliques\n", clique_count);
     gettimeofday(&end_compute_tv, NULL);
 
+    printf("\n");
 
-    pair<int,int> init_time = bmbk.get_running_usec(begin_init_tv, end_init_tv);
-    pair<int,int> compute_time = bmbk.get_running_usec(end_init_tv, end_compute_tv);
-    pair<int,int> total_time = bmbk.get_running_usec(begin_init_tv, end_compute_tv);
+    pair<int,int> init_time    = bmbk.get_running_usec(begin_init_tv, end_init_tv);
+    pair<int,int> compute_time = bmbk.get_running_usec(end_init_tv,   end_compute_tv);
+    pair<int,int> total_time   = bmbk.get_running_usec(begin_init_tv, end_compute_tv);
 
     printf("##### Running Report #####\n");
     printf("Init Time:    %d s %d us\n", init_time.first, init_time.second);
     printf("Compute Time: %d s %d us\n", compute_time.first, compute_time.second);
     printf("Total Time:   %d s %d us\n", total_time.first, total_time.second);
+
+    printf("\n");
 
     return 0;
 }

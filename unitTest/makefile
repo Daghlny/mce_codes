@@ -4,7 +4,7 @@ USER_DIR = ..
 GTEST_DIR = ../googletest/googletest
 CPPFLAGS += -isystem $(GTEST_DIR)/include -isystem ../
 #CXXFLAGS += -g -Wall -Wextra -pthread -std=c++11
-CXXFLAGS += -g -Wextra -pthread -std=c++11
+CXXFLAGS += -g -Wextra -pthread -std=c++11 -Wno-format
 
 #Which tests you want to do
 TESTS = bitMatrix.out graph.out
@@ -13,6 +13,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 				$(GTEST_DIR)/include/gtest/internal/*.h
 
 all : $(TESTS)
+	rm -f  *.a *.o
 
 clean:
 	rm -f $(TEST) gtest.a gtest_main.a *.o
