@@ -58,6 +58,14 @@ bitVector::bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num):
     //nothing to do
 }
 
+void
+bitVector::reset(elem_t *_h, size_t _n, size_t _valid)
+{
+    head = _h;
+    num  = _n;
+    valid_bit_num = _valid;
+}
+
 /** \brief set all bit in bitVector to the given bitvalue
  *  \param flag the given value("0" or "1")
  */
@@ -250,25 +258,28 @@ bitVector::allone(list<int> &inds)
 {
     int id = 0;
     int count = 0;
-    uint8_t *convert_ptr = (uint8_t*)(head);
-    int offset = valid_bit_num % 8;
-    int valid_byte_num = valid_bit_num / 8;
+    //Warning: Pay Attention to Little-Endian feature
+    //uint8_t *convert_ptr = (uint8_t*)(head);
+    int offset = valid_bit_num % EBIT;
+    int valid_elem_num = valid_bit_num / EBIT;
+    //int valid_byte_num = valid_bit_num / 8;
+    //Warning: These codes indicate the program only can run with 32bits
     int cnt = 0;
-    for (; cnt < valid_byte_num; ++cnt)
+    for (; cnt < valid_elem_num; ++cnt)
     {
-        if (convert_ptr[cnt] == 0)
+        if (head[cnt] == 0)
             continue;
-        for (int off = 0; off < 8; ++off)
-            if (convert_ptr[cnt] & masks_8bits[off] != 0 )
+        for (int off = 0; off < EBIT; ++off)
+            if ((head[cnt] & masks_32bits[off]) != 0 )
             {
-                inds.push_back(cnt*8 + off);
+                inds.push_back(cnt*EBIT + off);
                 ++count;
             }
     }
     for (int off = 0; off < offset ; ++off)
-        if (convert_ptr[cnt] & masks_8bits[off] != 0)
+        if ((head[cnt] & masks_32bits[off]) != 0)
         {
-            inds.push_back(cnt*8 + off);
+            inds.push_back(cnt*EBIT + off);
             ++count;
         }
 
@@ -440,6 +451,35 @@ bitMatrix::init(size_t _row, size_t _column)
     {
         rows[i] = bitVector(data+i*elem_num_r, elem_num_r, c_num);
     }
+}
+
+/** \brief reset the columns and rows of matrix without memory alloc
+ *  \param _r new row number
+ *  \param _c new column number
+ */
+int 
+bitMatrix::reset(size_t _r, size_t _c)
+{
+    c_num = _c;
+    r_num = _r;
+    size_t byte_num_r = ceil((double)(c_num / 8));
+    size_t elem_num_r = ceil((double)(byte_num_r) / sizeof(elem_t));
+
+    if (elem_num_r * r_num > elem_num){
+        delete[] data;
+        data = new elem_t[elem_num_r * r_num];
+        if (data == nullptr){
+            LOG("@data malloc error\n");
+            exit(0);
+        }
+    }
+
+    elem_num = elem_num_r * r_num;
+    //FIX: this operation maybe useless
+    memset(data, 0x00, sizeof(elem_t) * elem_num);
+
+    for (size_t i = 0; i < r_num; ++i)
+        rows[i].reset(data+i*elem_num_r, elem_num_r, c_num);
 }
 
 bitMatrix::~bitMatrix()

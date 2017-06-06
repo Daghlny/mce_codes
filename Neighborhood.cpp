@@ -41,6 +41,29 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
     assign_rows(g);
 }
 
+void
+Neighborhood::Nreset(graph_t &g, vid _v)
+{
+    v = _v;
+    nbeg = g.data[v].nbv;
+    nodenum = g.data[v].deg;
+    nend = g.data[v].nbv + nodenum;
+    // FIX: This can be optimized.
+    std::sort( nbeg, nend );
+    lower = std::lower_bound( nbeg, nend, v);
+    //FIX: to skip out the function
+    if ( lower == nend ){
+        // nothing to do
+    }
+
+    remain_vtx_num = static_cast<size_t>( nend - lower );
+    //init(remain_vtx_num, remain_vtx_num);
+    reset(nodenum, nodenum);
+    
+    //init(g.data[v].deg, g.data[v].deg);
+    assign_rows(g);
+}
+
 /** \brief assign every row of Neighborhood the intersection between /
  *         the neighbor and vertex @v. The neighbors whose id are smaller /
  *         than @v will only get all "0", because their rows will never used.

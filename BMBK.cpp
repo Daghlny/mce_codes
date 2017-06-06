@@ -57,19 +57,28 @@ BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
 int
 BMBK::compute(int thread_num = 1)
 {
+    vid max_deg = 2;
     omp_set_num_threads(thread_num);
     int *clique_num_perThread = new int[thread_num + 5];
     memset(clique_num_perThread, 0, sizeof(int) * (thread_num+5));
+    vector<bitMatrix> Pmats;
+    vector<bitMatrix> Xmats;
+    vector<Neighborhood> Nbhs;
+    for (int thid = 0; thid < thread_num; ++thid)
+    {
+        Pmats.emplace_back(max_deg + 2, max_deg);
+        Xmats.emplace_back(max_deg + 2, max_deg);
+        Nbhs.emplace_back(g, max_deg);
+    }
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
         //cout << i << " " << omp_get_thread_num() << endl;
+        //if ( i > 7000 ) continue;
         int threadID = omp_get_thread_num();
-        localbitVector R(g.nodenum);
         localbitVector lbvector(g.nodenum);
-        R.setall(0);
         Neighborhood nbhood(g, i);
         int top = 0;
         vid degree = g.data[i].deg;
@@ -85,6 +94,8 @@ BMBK::compute(int thread_num = 1)
         //FIX: a direct variable access should be optimized
         //FIX: the neighborhood size of current selected vertex is original degree, not degeneracy degree
         bitMatrix Pmat(degree+2, nbhood.get_nodenum());
+        localbitVector R(nbhood.get_nodenum());
+        R.setall(0);
         //FIX: this phase can be optimized
         Pmat[top].setall(1);
         bitMatrix Xmat(degree+2, degree);
@@ -94,6 +105,7 @@ BMBK::compute(int thread_num = 1)
         Xmat[top].setfront(pre_processed, 1);
         Pmat[top].setfront(pre_processed, 0);
 
+        //if ( i > 7000 ) continue;
         while ( top >= 0 )
         {
             int v = -1;
@@ -114,22 +126,26 @@ BMBK::compute(int thread_num = 1)
                 if ( Xmat[top].all(0) )
                 {
                     /* These codes are used for getting exact clique */
+                    /* Rstack stores exact current maximal clique */
+                    /*
                     list<int> clique;
                     R.allone(clique);
                     cout << "----------------------------" << endl;
+                    cout << "R: " << R.to_string() << endl;
                     for ( auto ver : clique )
                         cout << ver << " ";
                     cout << endl;
 
-                    for (int i = 0; i <= top; ++i)
+                    for (int i = 0; i < top; ++i)
                         cout << Rstack[i] << " ";
                     cout << endl;
 
+                    */
                     //you should output @R here as a maximal clique
                     clique_num_perThread[threadID]++;
                 }
-                R.setbit(Rstack[top], 0);
                 top--;
+                R.setbit(Rstack[top], 0);
                 //R.setlastone();
             }
         }
