@@ -57,7 +57,7 @@ Neighborhood::Nreset(graph_t &g, vid _v)
     }
 
     remain_vtx_num = static_cast<size_t>( nend - lower );
-    //init(remain_vtx_num, remain_vtx_num);
+    //This is the diffierence between this function with Constructor
     reset(nodenum, nodenum);
     
     //init(g.data[v].deg, g.data[v].deg);

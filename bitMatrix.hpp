@@ -22,6 +22,7 @@ class bitVector
         bitVector();
         bitVector(elem_t *_h, size_t _n);
         bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num);
+        bitVector(const bitVector &bv) = delete;
         
         void reset(elem_t *_h, size_t _n, size_t _valid);
         // set bitVector's bit to @flag
@@ -66,6 +67,7 @@ class bitMatrix
     public:
         bitMatrix();
         bitMatrix(size_t rownum, size_t columnnum);
+        bitMatrix(const bitMatrix& _b);
         void init(size_t rownum, size_t columnnum);
         int  reset(size_t rownum, size_t columnnum);
         ~bitMatrix();

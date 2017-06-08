@@ -61,15 +61,18 @@ BMBK::compute(int thread_num = 1)
     omp_set_num_threads(thread_num);
     int *clique_num_perThread = new int[thread_num + 5];
     memset(clique_num_perThread, 0, sizeof(int) * (thread_num+5));
-    vector<bitMatrix> Pmats;
-    vector<bitMatrix> Xmats;
-    vector<Neighborhood> Nbhs;
+    vector<bitMatrix> Pmats(thread_num-1, bitMatrix(max_deg+2, max_deg));
+    vector<bitMatrix> Xmats(thread_num-1, bitMatrix(max_deg+2, max_deg));
+    Neighborhood nbh(g, max_deg);
+    vector<Neighborhood> Nbhs(thread_num-1, nbh);
+    /*
     for (int thid = 0; thid < thread_num; ++thid)
     {
         Pmats.emplace_back(max_deg + 2, max_deg);
         Xmats.emplace_back(max_deg + 2, max_deg);
-        Nbhs.emplace_back(g, max_deg);
+        //Nbhs.push_back(nbh);
     }
+    */
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
@@ -88,20 +91,17 @@ BMBK::compute(int thread_num = 1)
             continue;
         }
         //FIX: how to manage this memory
-        //int *Rstack = new int[degree+2];
-        vector<int> Rstack(degree+2);
-        //memset(Rstack, 0, sizeof(int) * (degree+2));
-        //FIX: a direct variable access should be optimized
+        vector<int> Rstack(degree+2, 0);
         //FIX: the neighborhood size of current selected vertex is original degree, not degeneracy degree
-        bitMatrix Pmat(degree+2, nbhood.get_nodenum());
-        localbitVector R(nbhood.get_nodenum());
+        vid nbrnum = nbhood.get_nodenum();  // @nbrnum equals to the real neighbor number of @vertex
+        bitMatrix Pmat(degree+2, nbrnum);
+        localbitVector R(nbrnum);
         R.setall(0);
         //FIX: this phase can be optimized
         Pmat[top].setall(1);
         bitMatrix Xmat(degree+2, degree);
 
-        //cout << i << " " << nbhood.remain_vtx_num << " " << nbhood.get_nodenum() << endl;
-        int pre_processed = static_cast<int>(nbhood.get_nodenum() - nbhood.remain_vtx_num);
+        int pre_processed = static_cast<int>(nbrnum - nbhood.remain_vtx_num);
         Xmat[top].setfront(pre_processed, 1);
         Pmat[top].setfront(pre_processed, 0);
 

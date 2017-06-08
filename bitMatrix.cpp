@@ -291,6 +291,7 @@ bitVector::allone(list<int> &inds)
 int
 bitVector::allone()
 {
+    /* Warning: This function maybe wrong with Little-Endian feature */
     int count = 0;
     //uint8_t *convert_ptr = static_cast<uint8_t*>(head);
     uint8_t *convert_ptr = (uint8_t *)(head);
@@ -425,6 +426,12 @@ bitMatrix::bitMatrix(size_t _row, size_t _column):
     r_num(_row), c_num(_column), data(nullptr), rows(_row)
 {
     init(_row, _column);
+}
+
+bitMatrix::bitMatrix(const bitMatrix &_b):
+    r_num(_b.r_num), c_num(_b.c_num), data(nullptr), rows(_b.r_num)
+{
+    init(r_num, c_num);
 }
 
 /** \brief initialize the bitMatrix with given row and column number /
