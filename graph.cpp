@@ -102,6 +102,8 @@ graph_t::init_g_withddmap(const char *filename, Degeneracy &d)
         LOG("@start or @end is nullptr\n");
         exit(0);
     }
+
+    // read the total graph vertex number
     nodenum = atoi(start);
 
     data = new vtype[nodenum];
@@ -110,6 +112,8 @@ graph_t::init_g_withddmap(const char *filename, Degeneracy &d)
         LOG("@g.data == nullptr\n");
         exit(0);
     }
+
+    // read lines one by one for each vertex
     vid count = nodenum;
     while ( --count >= 0 )
     {
@@ -117,6 +121,7 @@ graph_t::init_g_withddmap(const char *filename, Degeneracy &d)
         if ( gbuff.getline(start, end) < 0 ) break;
 
         vid v = 0;
+        // read the original ID of current vertex
         while ( *start == '\n' ) ++start;
         while ( *start != ','  ){
             v = (10 * v) + int(*start) - 48;
@@ -124,8 +129,9 @@ graph_t::init_g_withddmap(const char *filename, Degeneracy &d)
         }
 
         assert( v < nodenum );
-        vid newid = d[v];
+        vid newid = d[v];   // the mapped id in degeneracy order
 
+        // read the original degree of current vertex
         vid deg = 0;
         while ( *(++start) != ':' && *start != '\n' )
             deg = ( 10 * deg ) + int(*start) - 48;
@@ -133,14 +139,26 @@ graph_t::init_g_withddmap(const char *filename, Degeneracy &d)
         data[newid].nbv = new vid[deg];
         data[newid].deg = deg;
 
+        // read all neighbors of current vertex
+        // memory layout of vertex.nbv: |--earlier--|--later--|
+        int earlier_end = 0;
+        int later_begin = deg-1;
         for ( int i = 0; i < deg; ++i )
         {
             vid u = 0;
             while ( *(++start) != ':' && *(start) != '\n' )
                 u = ( 10 * u ) + int(*start) - 48;
             u = d[u];
-            data[newid].nbv[i] = u;
+            if ( u < newid )
+                data[newid].nbv[earlier_end++] = u;
+            else
+                data[newid].nbv[later_begin--] = u;
         }
+        if (earlier_end != later_begin+1){
+            LOG("earlier_end(%d) OR later_begin(%d)\n", earlier_end, later_begin);
+            exit(0);
+        }
+        data[newid].earlier_end = earlier_end;
     }
     fclose(gfile);
 }
@@ -348,6 +366,8 @@ Degeneracy::init(const char *filepath, vid _nodenum)
     fclose(dfile);
 }
 
+/** \brief get the mapped id of @id
+ */
 vid&
 Degeneracy::operator[](const size_t id)
 {
@@ -412,7 +432,7 @@ Degeneracy::reverse_dict()
  *  the reverse version of operator[] 
  *  time: O(1)
  */
-inline vid
+vid
 Degeneracy::re(vid id)
 {
     return remap[id];

@@ -37,7 +37,7 @@ clean :
 	rm -rf ./*.o ./*.a
 
 all : $(AllObjects) main.out
-	rm -rf ./*.o ./*.a
+	#rm -rf ./*.o ./*.a
 
 HEADERS=./mce.hpp ./inputbuffer.hpp
 INCLUDES=-I ./rapidjson/include/

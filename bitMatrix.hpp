@@ -22,7 +22,6 @@ class bitVector
         bitVector();
         bitVector(elem_t *_h, size_t _n);
         bitVector(elem_t *_h, size_t _n, size_t _valid_bit_num);
-        bitVector(const bitVector &bv) = delete;
         
         void reset(elem_t *_h, size_t _n, size_t _valid);
         // set bitVector's bit to @flag

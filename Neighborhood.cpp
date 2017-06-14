@@ -23,21 +23,25 @@ Neighborhood::Neighborhood(graph_t &g, vid _v):
     bitMatrix(), v(_v)
 {
     nbeg = g.data[v].nbv;
-    nodenum = g.data[v].deg;
+    nodenum = g.data[v].deg; // the original vertex's degree
     nend = g.data[v].nbv + nodenum;
-    // FIX: This can be optimized.
-    std::sort( nbeg, nend );
-    lower = std::lower_bound( nbeg, nend, v);
-    //FIX: to skip out the function
-    if ( lower == nend ){
-        // nothing to do
+
+    // begin position of later neighbors 
+    laterNbrNum = nodenum - g.data[v].earlier_end ;
+    lower = nbeg + g.data[v].earlier_end;
+    later = g.data[v].earlier_end;
+
+    if (static_cast<int>(lower-nbeg) != g.data[v].earlier_end){
+        printf("static_cast<int>(lower-nbeg): %d\nearlier_end: %d\n", static_cast<int>(lower-nbeg), g.data[v].earlier_end);
+        exit(0);
     }
 
-    remain_vtx_num = static_cast<size_t>( nend - lower );
-    //init(remain_vtx_num, remain_vtx_num);
-    init(nodenum, nodenum);
+    if ( lower == nend )
+    {
+    }
+
     
-    //init(g.data[v].deg, g.data[v].deg);
+    init(laterNbrNum, laterNbrNum);
     assign_rows(g);
 }
 
@@ -56,7 +60,7 @@ Neighborhood::Nreset(graph_t &g, vid _v)
         // nothing to do
     }
 
-    remain_vtx_num = static_cast<size_t>( nend - lower );
+    laterNbrNum = static_cast<size_t>( nend - lower );
     //This is the diffierence between this function with Constructor
     reset(nodenum, nodenum);
     
@@ -72,29 +76,24 @@ Neighborhood::Nreset(graph_t &g, vid _v)
 void
 Neighborhood::assign_rows( graph_t &g )
 {
-    for ( vid *nbit = nbeg; nbit != nend; ++nbit)
+    size_t cnt = 0;
+    // @cnt  is the mapped id in Neighborhood
+    // @inbr is the index in vertex.nbv
+    std::sort(nbeg+later, nend);
+    for ( size_t inbr = later; (vid)inbr < nodenum && cnt < laterNbrNum; ++inbr, cnt++ )
     {
-        vid curnbor = *nbit;
+        vid nbr = nbeg[inbr];
+        vid *nbrnbv = g.data[nbr].nbv;
+        vid nbrdeg  = g.data[nbr].deg;
 
-        if ( curnbor > v )
+        for (int inbrnbr = 0; inbrnbr < nbrdeg; ++inbrnbr)
         {
-            vid *curnbv = g.data[curnbor].nbv;
-            vid  curdeg = g.data[curnbor].deg;
-
-            vid mapped_id = static_cast<vid>(nbit - nbeg);
-            //FIX: this procedure could be optimized by checking situation
-            for( int i = 0; i < curdeg; ++i )
-            {
-                int pos = binary_search(curnbv[i]);
-                if ( pos != -1 )
-                {
-                    rows[mapped_id].setbit(pos, 1);
-                }
-            }
-        } else {
-            vid mapped_id = static_cast<vid>(nbit - nbeg);
-            rows[mapped_id].setall(0);
+            int pos = binary_search(nbrnbv[inbrnbr]);
+            pos = pos;
+            if ( pos >= 0 )
+                rows[cnt].setbit(pos, 1);
         }
+        
     }
 }
 
@@ -124,10 +123,11 @@ Neighborhood::get_nodenum()
 }
 
 int
-Neighborhood::binary_search(vid v)
+Neighborhood::binary_search(vid v )
 {
-    int low = 0;
-    int high = static_cast<int>(nend - nbeg);
+    int low = later;
+    //int high = static_cast<int>(nend - nbeg);
+    int high = nodenum;
     while ( low <= high )
     {
         int mid = (low + high) / 2;
@@ -136,7 +136,7 @@ Neighborhood::binary_search(vid v)
         else if ( nbeg[mid] > v )
             high = mid - 1;
         else 
-            return mid;
+            return mid-later;
     }
     return -1;
 }

@@ -26,6 +26,8 @@ using std::endl;
 using std::pair;
 using std::set;
 
+vid* bSearch(vid *arr, int beg, int end, vid val);
+
 BMBK::BMBK():
     top(0)
 {
@@ -59,12 +61,13 @@ BMBK::compute(int thread_num = 1)
 {
     vid max_deg = 2;
     omp_set_num_threads(thread_num);
+    d.reverse_dict();
     int *clique_num_perThread = new int[thread_num + 5];
     memset(clique_num_perThread, 0, sizeof(int) * (thread_num+5));
     vector<bitMatrix> Pmats(thread_num-1, bitMatrix(max_deg+2, max_deg));
     vector<bitMatrix> Xmats(thread_num-1, bitMatrix(max_deg+2, max_deg));
-    Neighborhood nbh(g, max_deg);
-    vector<Neighborhood> Nbhs(thread_num-1, nbh);
+    //Neighborhood nbh(g, max_deg);
+    //vector<Neighborhood> Nbhs(thread_num-1, nbh);
     /*
     for (int thid = 0; thid < thread_num; ++thid)
     {
@@ -79,9 +82,7 @@ BMBK::compute(int thread_num = 1)
     for ( int i = 0; i < g.nodenum; ++i )
     {
         //cout << i << " " << omp_get_thread_num() << endl;
-        //if ( i > 7000 ) continue;
         int threadID = omp_get_thread_num();
-        localbitVector lbvector(g.nodenum);
         Neighborhood nbhood(g, i);
         int top = 0;
         vid degree = g.data[i].deg;
@@ -93,22 +94,27 @@ BMBK::compute(int thread_num = 1)
         //FIX: how to manage this memory
         vector<int> Rstack(degree+2, 0);
         //FIX: the neighborhood size of current selected vertex is original degree, not degeneracy degree
-        vid nbrnum = nbhood.get_nodenum();  // @nbrnum equals to the real neighbor number of @vertex
-        bitMatrix Pmat(degree+2, nbrnum);
-        localbitVector R(nbrnum);
-        R.setall(0);
+        
+        // @nbrnum equals to the real neighbor number of @vertex
+        // @remain is equal to the later neighbors number of @vertex
+        vid nbrnum = nbhood.get_nodenum();
+        vid remain = nbhood.laterNbrNum;    
+
+        bitMatrix Pmat(degree+2, remain);
+        bitMatrix Xmat(degree+2, remain);
+        int preNbrNum = static_cast<int>(nbrnum - remain);
+        vid *Xpre = g.data[i].nbv;
+        int XpreBegin = 0;
         //FIX: this phase can be optimized
+        //Pmat[0] == all bit "1"
+        //Xmat[0] == all bit "0"
         Pmat[top].setall(1);
-        bitMatrix Xmat(degree+2, degree);
 
-        int pre_processed = static_cast<int>(nbrnum - nbhood.remain_vtx_num);
-        Xmat[top].setfront(pre_processed, 1);
-        Pmat[top].setfront(pre_processed, 0);
-
-        //if ( i > 7000 ) continue;
+        //if ( i > 0 ) continue;
         while ( top >= 0 )
         {
             int v = -1;
+            //cout << "top: " << top << endl;
             //FIX: here can be optimized
             if ( ( v = Pmat[top].first(1)) != -1 )
             {
@@ -119,37 +125,26 @@ BMBK::compute(int thread_num = 1)
                 Xmat[top].setbit(pivot, 1);
                 Xmat[top+1].setWithBitAnd(nbhood[pivot], Xmat[top]);
                 Rstack[top] = pivot;
-                R.setbit(pivot, 1);
+                XpreBegin = XpreIntersect(Xpre, XpreBegin, preNbrNum, g.data[nbhood.original_id(pivot)]);
                 top++;
             } 
             else {
-                if ( Xmat[top].all(0) )
+                //Xmat[top].all(0) for later neighbors
+                //XpreBegin == preNbrNum for earlier neighbors
+                if ( Xmat[top].all(0) && XpreBegin == preNbrNum)
                 {
-                    /* These codes are used for getting exact clique */
-                    /* Rstack stores exact current maximal clique */
-                    /*
-                    list<int> clique;
-                    R.allone(clique);
-                    cout << "----------------------------" << endl;
-                    cout << "R: " << R.to_string() << endl;
-                    for ( auto ver : clique )
-                        cout << ver << " ";
+                    //you should output @Rstack here as a maximal clique
+                    cout << "clique: " << d.re(i) << " ";
+                    for (int itr = 0; itr < top; ++itr)
+                        cout << d.re(nbhood.original_id(Rstack[itr])) << " ";
                     cout << endl;
-
-                    for (int i = 0; i < top; ++i)
-                        cout << Rstack[i] << " ";
-                    cout << endl;
-
-                    */
-                    //you should output @R here as a maximal clique
+                    
                     clique_num_perThread[threadID]++;
                 }
                 top--;
-                R.setbit(Rstack[top], 0);
-                //R.setlastone();
             }
         }
-        //delete[] Rstack;
+        // this section is for every vertex
     }
 }
     int totalclique = 0;
@@ -157,6 +152,50 @@ BMBK::compute(int thread_num = 1)
         totalclique += clique_num_perThread[i];
     delete[] clique_num_perThread;
     return totalclique;
+}
+
+//XpreIntersect(Xpre, XpreBegin, preNbrNum, g.data[nbhood.original_id(pivot)]);
+size_t 
+BMBK::XpreIntersect(vid *Xpre, size_t XpreBegin, size_t preNbrNum, vtype &newv)
+{
+    size_t newXpreBegin = preNbrNum-1;
+    std::sort(Xpre+XpreBegin, Xpre+preNbrNum);
+    vid *newVNbr = newv.nbv;
+    for ( vid iter = 0; iter < newv.deg; ++iter)
+    {
+        vid *p = nullptr;
+        if ( (p = bSearch(Xpre, XpreBegin, newXpreBegin, newVNbr[iter])) != nullptr)
+        {
+             vid tmp = *p;
+             *p = Xpre[newXpreBegin];
+             Xpre[newXpreBegin] = tmp;
+             --newXpreBegin;
+        }
+    }
+
+    return newXpreBegin+1;
+}
+
+/** \brief search val in the range is [beg, end]
+ */
+vid *
+bSearch(vid *arr, int beg, int end, vid val)
+{
+    int mid = 0;
+    while( beg <= end )
+    {
+        mid = (beg + end) / 2;
+        if ( arr[mid] > val ){
+            end = mid-1;
+            continue;
+        } else if (arr[mid] < val)
+        {
+            beg = mid+1;
+            continue;
+        } else
+            return (arr+mid);
+    }
+    return nullptr;
 }
 
 void

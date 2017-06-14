@@ -18,7 +18,8 @@ class Neighborhood: public bitMatrix
         int mapped_id(vid v);
         vid get_nodenum();
 
-        size_t remain_vtx_num;  // number of Later Neighbors
+        size_t laterNbrNum;  // number of Later Neighbors
+
     private:
         void twoAdjlistAND(vid *lower, vid *nb, int index);
         void assign_rows(graph_t &g);
@@ -29,6 +30,7 @@ class Neighborhood: public bitMatrix
         vid *nend;          // out-of-range end iterator of adjlist
         vid *lower;         // Later Neighbors' begin iter of v
         vid nodenum;        // total number of neighbors of v
+        size_t later;       // index of the begin of later neighbors in vertex.nbv
         map<vid, int> dict;
 };
 

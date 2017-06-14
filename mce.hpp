@@ -59,6 +59,7 @@ struct vtype
     vid key;
     vid *nbv;
     vid deg;
+    int earlier_end; // the position with out-of-range
 };
 
 class graph_t 
@@ -101,7 +102,7 @@ class Degeneracy
         vid   ddeg();
         vid   get_nodenum();
         void  reverse_dict();
-        inline vid   re(vid id);
+        vid   re(vid id);
         ~Degeneracy();
     private:
         // @nodenum is only used for bound the @dmap
