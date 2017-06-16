@@ -81,7 +81,7 @@ BMBK::compute(int thread_num = 1)
 #pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
-        //cout << i << " " << omp_get_thread_num() << endl;
+        cout << i << " " << omp_get_thread_num() << endl;
         int threadID = omp_get_thread_num();
         Neighborhood nbhood(g, i);
         int top = 0;
@@ -109,6 +109,7 @@ BMBK::compute(int thread_num = 1)
         //Pmat[0] == all bit "1"
         //Xmat[0] == all bit "0"
         Pmat[top].setall(1);
+        vector<int> XpreBeginStack;
 
         //if ( i > 0 ) continue;
         while ( top >= 0 )
@@ -126,6 +127,7 @@ BMBK::compute(int thread_num = 1)
                 Xmat[top+1].setWithBitAnd(nbhood[pivot], Xmat[top]);
                 Rstack[top] = pivot;
                 XpreBegin = XpreIntersect(Xpre, XpreBegin, preNbrNum, g.data[nbhood.original_id(pivot)]);
+                XpreBeginStack.push_back(XpreBegin);
                 top++;
             } 
             else {
@@ -134,14 +136,22 @@ BMBK::compute(int thread_num = 1)
                 if ( Xmat[top].all(0) && XpreBegin == preNbrNum)
                 {
                     //you should output @Rstack here as a maximal clique
+                    /*
                     cout << "clique: " << d.re(i) << " ";
                     for (int itr = 0; itr < top; ++itr)
                         cout << d.re(nbhood.original_id(Rstack[itr])) << " ";
                     cout << endl;
+                    */
                     
                     clique_num_perThread[threadID]++;
                 }
                 top--;
+                if (XpreBeginStack.size() != 0)
+                {
+                    XpreBeginStack.erase(--XpreBeginStack.end());
+                    if (XpreBeginStack.size() != 0)
+                        XpreBegin = *(XpreBeginStack.end()-1);
+                }
             }
         }
         // this section is for every vertex
