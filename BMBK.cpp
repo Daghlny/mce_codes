@@ -81,7 +81,7 @@ BMBK::compute(int thread_num = 1)
 #pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
-        cout << i << " " << omp_get_thread_num() << endl;
+        //cout << i << " " << omp_get_thread_num() << endl;
         int threadID = omp_get_thread_num();
         Neighborhood nbhood(g, i);
         int top = 0;
