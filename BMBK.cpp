@@ -10,6 +10,7 @@
 #include <utility>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <sys/time.h>
 #include "omp.h"
 
@@ -18,6 +19,8 @@
 #include "Neighborhood.hpp"
 #include "mce.hpp"
 #include "BMBK.hpp"
+
+//#define OUTPUT_CLIQUE 1
 
 using std::map;
 using std::vector;
@@ -57,37 +60,36 @@ BMBK::BMBK(const char *gfilename, const char *dfilename, vid nodenum):
  *  \thread_num OpenMP's thread number parameter
  */
 int
-BMBK::compute(int thread_num = 1)
+BMBK::compute(int thread_num = 1, const char *resultFileName = "result.clique.txt")
 {
     vid max_deg = 2;
     omp_set_num_threads(thread_num);
     d.reverse_dict();
     int *clique_num_perThread = new int[thread_num + 5];
     memset(clique_num_perThread, 0, sizeof(int) * (thread_num+5));
-    vector<bitMatrix> Pmats(thread_num-1, bitMatrix(max_deg+2, max_deg));
-    vector<bitMatrix> Xmats(thread_num-1, bitMatrix(max_deg+2, max_deg));
-    //Neighborhood nbh(g, max_deg);
-    //vector<Neighborhood> Nbhs(thread_num-1, nbh);
-    /*
-    for (int thid = 0; thid < thread_num; ++thid)
-    {
-        Pmats.emplace_back(max_deg + 2, max_deg);
-        Xmats.emplace_back(max_deg + 2, max_deg);
-        //Nbhs.push_back(nbh);
-    }
-    */
+    std::ofstream resultFile(resultFileName); // only used when defined OUTPUT_CLIQUE
 #pragma omp parallel 
 {
 #pragma omp for schedule(dynamic, 10)
     for ( int i = 0; i < g.nodenum; ++i )
     {
-        //cout << i << " " << omp_get_thread_num() << endl;
+        cout << i << " " << omp_get_thread_num() << endl;
         int threadID = omp_get_thread_num();
         Neighborhood nbhood(g, i);
         int top = 0;
         vid degree = g.data[i].deg;
         if ( degree < 2 )
         {
+#ifdef OUTPUT_CLIQUE
+            if ( degree == 1 )
+            {
+                if ( g.data[i].nbv[0] < i )
+                    continue;
+                resultFile << d.re(i) << " " << d.re(g.data[i].nbv[0]) << endl;
+            }
+            else 
+                resultFile << d.re(i) << endl;
+#endif
             clique_num_perThread[threadID]++;
             continue;
         }
@@ -109,13 +111,13 @@ BMBK::compute(int thread_num = 1)
         //Pmat[0] == all bit "1"
         //Xmat[0] == all bit "0"
         Pmat[top].setall(1);
-        vector<int> XpreBeginStack;
+        vector<int> XpreBeginStack(degree+2, 0);
+        vid oldID = d.re(i);
 
         //if ( i > 0 ) continue;
         while ( top >= 0 )
         {
             int v = -1;
-            //cout << "top: " << top << endl;
             //FIX: here can be optimized
             if ( ( v = Pmat[top].first(1)) != -1 )
             {
@@ -127,7 +129,7 @@ BMBK::compute(int thread_num = 1)
                 Xmat[top+1].setWithBitAnd(nbhood[pivot], Xmat[top]);
                 Rstack[top] = pivot;
                 XpreBegin = XpreIntersect(Xpre, XpreBegin, preNbrNum, g.data[nbhood.original_id(pivot)]);
-                XpreBeginStack.push_back(XpreBegin);
+                XpreBeginStack[top] = XpreBegin;
                 top++;
             } 
             else {
@@ -135,23 +137,18 @@ BMBK::compute(int thread_num = 1)
                 //XpreBegin == preNbrNum for earlier neighbors
                 if ( Xmat[top].all(0) && XpreBegin == preNbrNum)
                 {
-                    //you should output @Rstack here as a maximal clique
-                    /*
-                    cout << "clique: " << d.re(i) << " ";
+#ifdef OUTPUT_CLIQUE
+                    resultFile << d.re(i);
                     for (int itr = 0; itr < top; ++itr)
-                        cout << d.re(nbhood.original_id(Rstack[itr])) << " ";
-                    cout << endl;
-                    */
+                        resultFile << " " << d.re(nbhood.original_id(Rstack[itr]));
+                    resultFile << endl;
+#endif
                     
                     clique_num_perThread[threadID]++;
                 }
                 top--;
-                if (XpreBeginStack.size() != 0)
-                {
-                    XpreBeginStack.erase(--XpreBeginStack.end());
-                    if (XpreBeginStack.size() != 0)
-                        XpreBegin = *(XpreBeginStack.end()-1);
-                }
+                if (top > 0)
+                    XpreBegin = XpreBeginStack[top-1];
             }
         }
         // this section is for every vertex
@@ -165,9 +162,17 @@ BMBK::compute(int thread_num = 1)
 }
 
 //XpreIntersect(Xpre, XpreBegin, preNbrNum, g.data[nbhood.original_id(pivot)]);
+/** \brief intersect Xpre array with newv's all neighbors to get a new Xpre arrray
+ *  \param Xpre current common earlier neighbors
+ *  \param XpreBegin begin position index of Xpre
+ *  \param preNbrNum number of earlier of current vertex, also the out-of-range index of Xpre
+ *  \param newv vertex ID of the neighbor
+ */
 size_t 
 BMBK::XpreIntersect(vid *Xpre, size_t XpreBegin, size_t preNbrNum, vtype &newv)
 {
+    if ( preNbrNum == 0 )
+        return XpreBegin;
     size_t newXpreBegin = preNbrNum-1;
     std::sort(Xpre+XpreBegin, Xpre+preNbrNum);
     vid *newVNbr = newv.nbv;

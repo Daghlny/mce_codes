@@ -24,7 +24,7 @@ class BMBK
         BMBK();
         BMBK(const char *gfilename, const char *dfilename, vid nodenum);
 
-        int compute(int thread_num);
+        int compute(int thread_num, const char *resultFileName);
         size_t XpreIntersect(vid *Xpre, size_t XpreBegin, size_t preNbrNUm, vtype &newv);
         void print();
         std::pair<int,int> get_running_usec(struct timeval a, struct timeval b);

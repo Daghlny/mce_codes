@@ -19,15 +19,18 @@ main(int argc, char **argv)
 {
     if ( argc < 3 )
     {
-        printf("Program GraphFileName DegeneracyFileName [ThreadNum]\n");
+        printf("Program GraphFileName DegeneracyFileName [outputFileName] [ThreadNum]\n");
         exit(0);
     }
     const char *gfilename = argv[1];
     const char *dfilename = argv[2];
 
     int thread_num = 1;
-    if (argc >= 4)
-        thread_num = atoi(argv[3]);
+    char resultFileName[100] = "result.clique.txt";
+    if ( argc >= 4 )
+        memcpy(resultFileName, argv[3], strlen(argv[3]));
+    if ( argc >= 5 )
+        thread_num = atoi(argv[4]);
 
     FILE *gfile = fopen(gfilename, "r");
     vid nodenum = 0;
@@ -46,7 +49,7 @@ main(int argc, char **argv)
 
     printf("\n");
 
-    int clique_count = bmbk.compute(thread_num);
+    int clique_count = bmbk.compute(thread_num, resultFileName);
     printf("##### Maximal Clique Statistics #####\n");
     printf("There are %d maximal cliques\n", clique_count);
     gettimeofday(&end_compute_tv, NULL);
