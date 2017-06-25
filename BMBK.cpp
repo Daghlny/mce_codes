@@ -105,14 +105,16 @@ BMBK::compute(int thread_num = 1, const char *resultFileName = "result.clique.tx
         bitMatrix Pmat(degree+2, remain);
         bitMatrix Xmat(degree+2, remain);
         int preNbrNum = static_cast<int>(nbrnum - remain);
-        vid *Xpre = g.data[i].nbv;
+        //vid *Xpre = g.data[i].nbv;
+        vid *Xpre = new vid[preNbrNum];
+        memcpy(Xpre, g.data[i].nbv, sizeof(vid)*preNbrNum);
         int XpreBegin = 0;
         //FIX: this phase can be optimized
         //Pmat[0] == all bit "1"
         //Xmat[0] == all bit "0"
         Pmat[top].setall(1);
         vector<int> XpreBeginStack(degree+2, 0);
-        vid oldID = d.re(i);
+        vid oldID = d.re(i);    // the original ID of current vertex
 
         //if ( i > 0 ) continue;
         while ( top >= 0 )
@@ -152,6 +154,7 @@ BMBK::compute(int thread_num = 1, const char *resultFileName = "result.clique.tx
             }
         }
         // this section is for every vertex
+        delete[] Xpre;
     }
 }
     int totalclique = 0;
