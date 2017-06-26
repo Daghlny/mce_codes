@@ -31,7 +31,7 @@ main.o : $(USER_DIR)/main.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/main.cpp
 
 main.out : graph.o bitMatrix.o Neighborhood.o inputbuffer.o BMBK.o main.o
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o ../$@
 
 clean : 
 	rm -rf ./*.o ./*.a

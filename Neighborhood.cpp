@@ -127,7 +127,7 @@ Neighborhood::binary_search(vid v )
 {
     int low = later;
     //int high = static_cast<int>(nend - nbeg);
-    int high = nodenum;
+    int high = nodenum-1;
     while ( low <= high )
     {
         int mid = (low + high) / 2;

@@ -80,16 +80,20 @@ BMBK::compute(int thread_num = 1, const char *resultFileName = "result.clique.tx
         vid degree = g.data[i].deg;
         if ( degree < 2 )
         {
-#ifdef OUTPUT_CLIQUE
             if ( degree == 1 )
             {
                 if ( g.data[i].nbv[0] < i )
                     continue;
+#ifdef OUTPUT_CLIQUE
                 resultFile << d.re(i) << " " << d.re(g.data[i].nbv[0]) << endl;
+#endif
             }
             else 
+            {
+#ifdef OUTPUT_CLIQUE
                 resultFile << d.re(i) << endl;
 #endif
+            }
             clique_num_perThread[threadID]++;
             continue;
         }
@@ -145,12 +149,13 @@ BMBK::compute(int thread_num = 1, const char *resultFileName = "result.clique.tx
                         resultFile << " " << d.re(nbhood.original_id(Rstack[itr]));
                     resultFile << endl;
 #endif
-                    
                     clique_num_perThread[threadID]++;
                 }
                 top--;
                 if (top > 0)
                     XpreBegin = XpreBeginStack[top-1];
+                else if (top == 0)
+                    XpreBegin = 0;
             }
         }
         // this section is for every vertex
@@ -175,13 +180,14 @@ size_t
 BMBK::XpreIntersect(vid *Xpre, size_t XpreBegin, size_t preNbrNum, vtype &newv)
 {
     if ( preNbrNum == 0 )
-        return XpreBegin;
+        return 0;
     size_t newXpreBegin = preNbrNum-1;
     std::sort(Xpre+XpreBegin, Xpre+preNbrNum);
     vid *newVNbr = newv.nbv;
     for ( vid iter = 0; iter < newv.deg; ++iter)
     {
         vid *p = nullptr;
+        std::sort(Xpre+XpreBegin, Xpre+newXpreBegin+1);
         if ( (p = bSearch(Xpre, XpreBegin, newXpreBegin, newVNbr[iter])) != nullptr)
         {
              vid tmp = *p;
